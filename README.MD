@@ -13,6 +13,7 @@ Following the steps from https://learnopengl.com/ but consolidated to make a use
  - custom game object behaviors
  - keyboard, mouse input handling
  - 4 types of lights
+ - conversion tool: Equirectangular image -> Cubemap faces
 
 # Requirements:
  - cmake 3.5+
