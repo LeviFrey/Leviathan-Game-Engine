@@ -31,7 +31,7 @@ The sample program features:
 - Dynamic lighting 
 - Different lighting types 
 - Rendering effects
-- Keyboard / Mouse input (press "o" and "k")
+- Keyboard / Mouse input (press "o" and "f")
 - Customized / modular game object behavior 
 
 (run sample program)
