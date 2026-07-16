@@ -4,7 +4,7 @@
 
 namespace Shapes {
 Mesh createCube(float size);
-Mesh createPlane(float size);
+Mesh createPlane(int width_n, int height_n, float edge_width, float edge_height);
 Mesh createQuad();
 }
 

@@ -39,7 +39,6 @@ private:
     
     struct DefaultGeometry {
         MeshID cube_;
-        MeshID plane_;
         MeshID quad_;
     };
 

@@ -9,7 +9,7 @@
 Texture TextureLoader::loadTextureFromFile(
         const std::filesystem::path& path, 
         TextureFromFileContext context) 
-{   
+{  
     int width, height, nrChannels;
     unsigned int ID;
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
@@ -20,7 +20,6 @@ Texture TextureLoader::loadTextureFromFile(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, context.wrapT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, context.minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, context.magFilter);
-    std::cout << nrChannels << std::endl;
     if (data) { 
         GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
         glTexImage2D(

@@ -45,15 +45,16 @@ class FlashLight : public Component {
     bool on_ = false;
 };
 
-
 int main() {
     /*
      * Game Intialization
      */
     Game game(1920, 1080);
+
     /*
      * Load needed Assets
      */
+
     // Shaders
     ShaderID flatShader = AssetManager::loadShader(
             PathUtils::shaderDir / "flat/flat.vert",
@@ -78,10 +79,10 @@ int main() {
             PathUtils::textureDir / "container2.jpg");
     TextureID containerSpecular = AssetManager::loadTexture(
             PathUtils::textureDir / "container2_specular.jpg");
-    TextureID brickDiffuse = AssetManager::loadTexture(
-            PathUtils::textureDir / "brick.jpg");
+    TextureID grassDiffuse = AssetManager::loadTexture(
+            PathUtils::textureDir / "grass15.png");
 
-    std::filesystem::path cubeDir = PathUtils::textureDir / "skybox";
+    std::filesystem::path cubeDir = PathUtils::textureDir / "sky";
     TextureID skyCubemap = AssetManager::loadCubemap(
             {cubeDir / "right.jpg", cubeDir / "left.jpg", 
             cubeDir / "top.jpg", cubeDir / "bottom.jpg",
@@ -94,15 +95,18 @@ int main() {
     containerMaterial.specular_ = containerSpecular;
     containerMaterial.shininess_ = 32.0f;
 
-    Material brickMaterial;
-    brickMaterial.diffuse_ = brickDiffuse;
-    brickMaterial.shininess_ = 32.0f;
+    float floorSize = 10000.0f;
+    float tileSize = 4.0f;
+    Material grassMaterial;
+    grassMaterial.diffuse_ = grassDiffuse;
+    grassMaterial.shininess_ = 32.0f;
+    grassMaterial.tesselationRate_ = floorSize / tileSize;
 
     MaterialID containerMatID = AssetManager::storeMaterial(containerMaterial);
-    MaterialID brickMatID = AssetManager::storeMaterial(brickMaterial);
+    MaterialID grassMatID = AssetManager::storeMaterial(grassMaterial);
 
     // Meshes
-    MeshID floorMesh = AssetManager::storeMesh(Shapes::createPlane(40.0f));
+    MeshID floorMesh = AssetManager::storeMesh(Shapes::createPlane(1, 1, floorSize, floorSize));
 
     // Models
     ModelID backpackModel = AssetManager::loadModel(PathUtils::objectDir / "backpack/backpack.obj");
@@ -113,7 +117,7 @@ int main() {
             {AssetManager::defaultMeshes().cube_, AssetManager::defaultMaterials().textureless_}
             }});
     ModelID floorModel = AssetManager::storeModel({{
-            {floorMesh, brickMatID}
+            {floorMesh, grassMatID}
             }});
     
     // Game Objects
@@ -123,6 +127,7 @@ int main() {
     GameObject mirrorContainer(&game);
     GameObject floor(&game);
     GameObject flashlight(&game);
+    GameObject sunlight(&game);
 
     Transform* t;
     Renderer* r;
@@ -142,7 +147,7 @@ int main() {
     // backpack
     t = backpack.addComponent<Transform>();
     r = backpack.addComponent<Renderer>(backpackModel, phongShader);
-    r->getDebugConfig().visualizeNormals_ = true;
+    //r->getDebugConfig().visualizeNormals_ = true;
     t->translate(glm::vec3(10.0f, -1.0f, -5.0f));
     game.addGameObject(&backpack);
 
@@ -158,7 +163,7 @@ int main() {
     t = floor.addComponent<Transform>();
     r = floor.addComponent<Renderer>(floorModel, phongShader);
     t->translate(glm::vec3(01.0f, -3.0f, 0.0f));
-    //game.addGameObject(&floor);
+    game.addGameObject(&floor);
 
     // flashlight
     t = flashlight.addComponent<Transform>();
@@ -175,6 +180,10 @@ int main() {
     t->scale(glm::vec3(4,4,4));
     r = mirrorContainer.addComponent<Renderer>(containerModel, reflectShader);
     game.addGameObject(&mirrorContainer);
+
+    DirectionalLight* d = sunlight.addComponent<DirectionalLight>();
+    game.addLightSource(d);
+    game.addGameObject(&sunlight);
 
     game.Loop();
     

@@ -59,6 +59,7 @@ void Renderer::useMaterial(const Material& material, const Shader& shader) {
     glBindTextureUnit((int)TextureBinding::Diffuse, diffuse.ID_);
     glBindTextureUnit((int)TextureBinding::Specular, specular.ID_);
     shader.setFloat("material.shininess", material.shininess_);
+    shader.setFloat("material.tesselationRate", material.tesselationRate_);
 }
 
 void Renderer::drawMesh(const Mesh& mesh) {

@@ -58,7 +58,6 @@ void AssetManager::init() {
      *  Load Engine Geometry
      */
     defaultGeometry_.cube_ = storeMesh(Shapes::createCube(1.0f));
-    defaultGeometry_.plane_ = storeMesh(Shapes::createPlane(1.0f));
     defaultGeometry_.quad_ = storeMesh(Shapes::createQuad());
 
     /*

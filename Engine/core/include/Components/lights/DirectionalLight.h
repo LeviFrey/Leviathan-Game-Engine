@@ -1,7 +1,7 @@
 #ifndef DIRECTIONAL_LIGHT_SOURCE_H
 #define DIRECTIONAL_LIGHT_SOURCE_H
 
-#include "Components/Component.h"
+#include "Components/AllComponents.h"
 #include "Components/LightSource.h"
 
 class DirectionalLight : public LightSource {

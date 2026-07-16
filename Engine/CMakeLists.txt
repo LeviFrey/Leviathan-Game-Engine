@@ -21,6 +21,7 @@ target_link_libraries(Engine PUBLIC
     glad
     glm
     stb_image
+    stb_image_write
 )
 
 find_package(assimp REQUIRED)

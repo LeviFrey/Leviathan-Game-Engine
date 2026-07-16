@@ -20,7 +20,7 @@
 #include "AssetManager.h"
 #include "PathUtils.h"
 #include "AssetTypes.h"
-#include "CubemapConverter.h"
+#include "Tools/Tools.h"
 #include "TextureLoader.h"
 #include "ShaderLoader.h"
 

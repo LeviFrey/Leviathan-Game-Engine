@@ -1,6 +1,6 @@
-Working on moving keyboard/mouse information to seperate classes so not stored in main function, because tthats stupid.
+Working on moving keyboard/mouse information to seperate classes so not stored in main function, because thats stupid.
 
-- need to make an App class that stores handelers and uses WindowUserPointer to direct events to a mouse handler and keyboard handler.
+- need to make an App class that stores handlers and uses WindowUserPointer to direct events to a mouse handler and keyboard handler.
 
 - need to create Mouse Handler
 - need to create Keyboard Handler
@@ -13,3 +13,20 @@ Working on moving keyboard/mouse information to seperate classes so not stored i
 
 9/29/2025
 - Need to implement lists of lights efficiently that will allow for multiple types of lights!?
+
+6/6/2026
+ --- Need to create overall skybox generation pipeline, here are the steps:
+ - Need to implement image resolution lower with stbi image to get 4k equirectangular jpg for my skybox
+ - Need to need to get openGL to return back skybox textures and store in a file
+ - Find a way to store these images in a compressed format
+ --- Need to rework how Game handles GameObjects
+ - remove 2 way dependency, find a solution to giving objects to keyboard/mouse handler without having to reach into the game. Possibly a game state context?
+ - change how GameObject register with eachother if they depend on each other, example: Camera needs a Transform to calc matrices
+ - Use this to make the new Camera system with different types of behavior: FPS/FreeCam
+ - implement simple Camera register system
+
+ 6/29/2026
+ - didnt have wifi.. need to add git module stb_write_image
+
+ 7/16/26
+ - equirectToCube works now, but cubemaps are stored and loaded as very large Jpg. At some point consider using GPU friendly conversion methods. But would have to stop using stb_image because it can't load these image types.

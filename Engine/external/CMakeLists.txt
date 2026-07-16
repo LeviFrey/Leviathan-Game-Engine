@@ -32,7 +32,14 @@ target_include_directories(glm INTERFACE
 # stb_image (header-only)
 # -----------------------
 add_library(stb_image INTERFACE)
-
 target_include_directories(stb_image INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/stb_image
+)
+
+# -----------------------------
+# stb_image_write (header-only)
+# -----------------------------
+add_library(stb_image_write INTERFACE)
+target_include_directories(stb_image_write INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/stb_image_write
 )

@@ -269,8 +269,6 @@ void Game::drawSkybox() {
     glDepthFunc(GL_LESS);
 }
 
-
-
 void Game::applyGlobalUniforms(const Shader& shader) {
     const Texture& texture = AssetManager::getCubemap(skyboxTexture_);
     glBindTextureUnit((int)TextureBinding::Skybox, texture.ID_);

@@ -1,18 +1,23 @@
 #include "Engine.h"
 #include <iostream>
+#include <filesystem>
 
 int main() {
     Game game(1500, 900);
 
-    // Shaders
-    ShaderID reflect = AssetManager::loadShader(
-            PathUtils::shaderDir / "reflect/reflect.vert",
-            PathUtils::shaderDir / "reflect/reflect.frag");
-
     // Textures
-    TextureID cubemap = AssetManager::storeCubemap(
-        CubemapConverter::equirectangularToCubemap(PathUtils::textureDir / "grassland.jpg")
-    );
+    std::filesystem::path dir = PathUtils::textureDir / "sky";
+    Texture skyboxTex = TextureLoader::loadCubemapFromFile({
+        dir / "right.jpg",
+        dir / "left.jpg",
+        dir / "top.jpg",
+        dir / "bottom.jpg",
+        dir / "front.jpg",
+        dir / "back.jpg"
+    });
+
+    TextureID cubemap = AssetManager::storeCubemap(skyboxTex);
+            
 
     game.setSkybox(cubemap);
     game.Loop();
