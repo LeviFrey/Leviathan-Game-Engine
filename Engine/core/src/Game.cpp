@@ -23,7 +23,7 @@ void printVectr(glm::vec3 vector) {
 
 void Game::frameBufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-    GamePtr(window)->getCamera().getComponent<Camera>()->setAspectRatio((float)width/(float)height);
+    GamePtr(window)->getCamera()->setAspectRatio((float)width/(float)height);
 }
 
 Game* Game::GamePtr(GLFWwindow* window) {
@@ -109,10 +109,12 @@ Game::Game(int window_width, int window_height) {
     // Create important game objects:
     mouse_handler_ = MouseHandler();
     keyboard_handler_ = KeyboardHandler(); 
+    /*
     camera_.setGame(this);
     camera_.addComponent<Transform>();
     Camera* c = camera_.addComponent<Camera>();
     c->setAspectRatio((float)window_width_ / (float)window_height_);
+    */
     
     
     // Gather Assets
@@ -170,6 +172,8 @@ void Game::Loop() {
         obj->start();
     }
 
+    if (camera_ == nullptr) { std::cout << "Engine Error: No Camera Set" << std::endl; };
+
     while(!glfwWindowShouldClose(window_)) {
 
         // gather user input and update input handlers
@@ -183,7 +187,6 @@ void Game::Loop() {
         }
 
         DeltaClock::tick();
-        camera_.update();
         // Update all game objects
         for (GameObject* obj : game_objects_) {
             obj->update();
@@ -236,7 +239,7 @@ void Game::writeToUBOs() {
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightBlock), &light_block);
         
     // fill Camera UBO
-    CameraData cameraData = camera_.getComponent<Camera>()->getData();
+    CameraData cameraData = camera_->getData();
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO_);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraData), &cameraData); 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

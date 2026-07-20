@@ -2,17 +2,23 @@
 #include <glm/glm.hpp>
 #include "Components/Component.h"
 #include "CameraData.h"
+#include <iostream>
 
 class Camera : public Component {
     public:
-        Camera(float speed = 5.0f,
-               float sensitivity = 0.15f,
-               float fov = 45.0f,
-               float aspect_ratio = 1.0f,
-               float zNear = 0.1f,
-               float zFar = 100.0f);
-
-        void update() override;
+        Camera(
+            float sensitivity = 0.15f,
+            float fov = 45.0f,
+            float aspect_ratio = 1.0f,
+            float zNear = 0.1f,
+            float zFar = 100.0f
+        ) :
+        sensitivity_(sensitivity), 
+        fov_(fov), 
+        aspect_ratio_(aspect_ratio),
+        zNear_(zNear),
+        zFar_(zFar)
+        { up_ = glm::vec3(0.0f, 1.0f, 0.0f); }
 
         glm::mat4 getView();
         glm::mat4 getProjection();
@@ -22,12 +28,11 @@ class Camera : public Component {
         float getYaw() { return yaw_; }
         CameraData getData();
 
-        void setSpeed(float speed) { speed_ = speed; }
+        void setSensitivity(float sensitivity) { sensitivity_ = sensitivity; }
         void setAspectRatio(float ratio) { aspect_ratio_ = ratio; }
 
-    private:
+    protected:
         float fov_;
-        float speed_;
         float sensitivity_;
         glm::vec3 up_;
         float yaw_ = 0;

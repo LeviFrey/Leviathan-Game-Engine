@@ -49,7 +49,9 @@ int main() {
     /*
      * Game Intialization
      */
-    Game game(1920, 1080);
+    int window_width = 1000;
+    int window_height = 1000;
+    Game game(window_width, window_height);
 
     /*
      * Load needed Assets
@@ -128,6 +130,7 @@ int main() {
     GameObject floor(&game);
     GameObject flashlight(&game);
     GameObject sunlight(&game);
+    GameObject camera(&game);
 
     Transform* t;
     Renderer* r;
@@ -169,8 +172,7 @@ int main() {
     t = flashlight.addComponent<Transform>();
     SpotLight* s = flashlight.addComponent<SpotLight>();
     flashlight.addComponent<FlashLight>();
-    game.getCamera().addChild(&flashlight);
-    t->translate(glm::vec3(1.0f,-0.2f, 0.5f));
+    camera.addChild(&flashlight);
     game.addGameObject(&flashlight);
     game.addLightSource(s);
 
@@ -180,10 +182,18 @@ int main() {
     t->scale(glm::vec3(4,4,4));
     r = mirrorContainer.addComponent<Renderer>(containerModel, reflectShader);
     game.addGameObject(&mirrorContainer);
-
+    
+    // sunlight source
     DirectionalLight* d = sunlight.addComponent<DirectionalLight>();
     game.addLightSource(d);
     game.addGameObject(&sunlight);
+
+    // camera
+    t = camera.addComponent<Transform>();
+    FreeCamera* c = camera.addComponent<FreeCamera>();
+    c->setAspectRatio((float)window_width/(float)window_height);
+    game.setCamera(c);
+    game.addGameObject(&camera);
 
     game.Loop();
     
