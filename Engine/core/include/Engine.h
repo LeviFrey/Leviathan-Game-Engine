@@ -14,7 +14,7 @@
 #include "Material.h"
 
 /*
- * Utility Header
+ * Utility Headers:
  */
 #include "DeltaClock.h"
 #include "AssetManager.h"
