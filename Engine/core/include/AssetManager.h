@@ -110,22 +110,21 @@ private:
                     other.geometry);
         }
     };
-    /*
-    struct ShaderKey {
-        std::string vertex_path;
-        std::string fragment_path;
-        bool operator<(const ShaderKey& other) const {
-            if (vertex_path != other.vertex_path) return vertex_path < other.vertex_path;
-            return fragment_path < other.fragment_path;
-        }
-    };
-    */
 
     struct CubemapKey {
         std::array<std::filesystem::path, 6> paths;
         bool operator<(const CubemapKey& other) const {
             return paths < other.paths;
         }
+    };
+    
+    template <typename T>
+    struct AssetStorage;
+
+    template <>
+    struct AssetStorage<Model> {
+        std::vector <Model> data_;
+        std::unordered_map<std::string, ModelID> registry_;
     };
 
     // Global Data Storage
