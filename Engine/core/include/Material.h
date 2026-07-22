@@ -21,8 +21,8 @@ struct Material {
 */
 
 struct Material {
-    TextureID diffuse_  = 0;
-    TextureID specular_ = 0;
+    TextureID diffuse_  = {0};
+    TextureID specular_ = {0};
     float shininess_    = 1.0f;
     float tesselationRate_ = 1.0f;
 };

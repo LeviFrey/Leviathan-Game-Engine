@@ -79,6 +79,8 @@ public:
     static ModelID storeModel(Model model);
     static ShaderID storeShader(Shader shader);
     
+    // REGISTER assets with user-specific strings
+    static 
     // Get Preloaded assets
     static const DefaultShaders& defaultShaders() { return defaultShaders_; }
     static const DefaultGeometry& defaultMeshes() { return defaultGeometry_; }
