@@ -249,8 +249,8 @@ void Game::drawScreenBuffer() {
     glDisable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    const Shader& shader = AssetManager::getShader(postEffect_);
-    const Mesh& quad = AssetManager::getMesh(AssetManager::defaultMeshes().quad_);
+    const Shader& shader = AssetManager::getAssetFromID<Shader>(postEffect_);
+    const Mesh& quad = AssetManager::getAssetFromID<Mesh>(AssetManager::defaultMeshes().quad_);
 
     shader.use();
     glBindTextureUnit((int)TextureBinding::PostProcess, buffer_texture_.ID_);
@@ -261,8 +261,8 @@ void Game::drawScreenBuffer() {
 
 void Game::drawSkybox() {
     glDepthFunc(GL_LEQUAL);
-    const Shader& shader = AssetManager::getShader(AssetManager::defaultShaders().skybox_);
-    const Mesh& mesh = AssetManager::getMesh(AssetManager::defaultMeshes().cube_);
+    const Shader& shader = AssetManager::getAssetFromID<Shader>(AssetManager::defaultShaders().skybox_);
+    const Mesh& mesh = AssetManager::getAssetFromID<Mesh>(AssetManager::defaultMeshes().cube_);
 
     shader.use();
     applyGlobalUniforms(shader);
@@ -273,7 +273,7 @@ void Game::drawSkybox() {
 }
 
 void Game::applyGlobalUniforms(const Shader& shader) {
-    const Texture& texture = AssetManager::getCubemap(skyboxTexture_);
+    const Texture& texture = AssetManager::getAssetFromID<Texture>(skyboxTexture_);
     glBindTextureUnit((int)TextureBinding::Skybox, texture.ID_);
     shader.setFloat("time", glfwGetTime());
 }

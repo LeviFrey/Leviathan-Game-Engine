@@ -1,20 +1,20 @@
 #pragma once
 #include <cstdint>
 
-struct ModelTag {};
-struct MeshTag {};
-struct TextureTag {};
-struct MaterialTag {};
-struct ShaderTag {};
+struct Model;
+struct Mesh;
+struct Texture;
+struct Material;
+struct Shader;
 
-template <typename Tag>
+template <typename T>
 struct AssetID {
     uint32_t value;
 };
 
-using ModelID    = AssetID<ModelTag>;
-using MeshID     = AssetID<MeshTag>;
-using TextureID  = AssetID<TextureTag>;
-using MaterialID = AssetID<MaterialTag>;
-using ShaderID   = AssetID<ShaderTag>;
+using ModelID    = AssetID<Model>;
+using MeshID     = AssetID<Mesh>;
+using TextureID  = AssetID<Texture>;
+using MaterialID = AssetID<Material>;
+using ShaderID   = AssetID<Shader>;
 
