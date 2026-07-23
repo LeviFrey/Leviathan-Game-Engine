@@ -12,7 +12,6 @@
 #include "Input/MouseHandler.h"
 #include "Input/KeyboardHandler.h"
 #include "GameObject.h"
-#include "Components/FreeCamera.h"
 #include "Components/Camera.h"
 #include "Shader.h"
 #include "Components/LightSource.h"
@@ -38,7 +37,7 @@ class Game {
         KeyboardHandler* getKeyboardHandler();
         Camera* getCamera() { return camera_; }
 
-        void setCamera(Camera* camera) { camera_ = camera; }
+        void setCamera(Camera* camera);
         void setDebugFunction(std::function<void(Game&)> debugFunction);
         
         void Loop();

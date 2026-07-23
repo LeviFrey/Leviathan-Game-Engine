@@ -45,6 +45,25 @@ class FlashLight : public Component {
     bool on_ = false;
 };
 
+void genAssets() {
+    Shader phong_shader = ShaderLoader::loadShaderFromFile(
+            PathUtils::shaderDir / "phong/phong.vert",
+            PathUtils::shaderDir / "phong/phong.frag");
+    AssetManager::registerAsset<Shader>("phong_shader", phong_shader);
+    
+    // Assets for Container
+    TextureID container_diffuse = AssetManager::loadTexture(PathUtils::textureDir / "container2.jpg");
+    TextureID container_specular = AssetManager::loadTexture(PathUtils::textureDir / "container2_specular.jpg");
+    Material container_material;
+    container_material.diffuse_ = container_diffuse;
+    container_material.specular_ = container_specular;
+    container_material.shininess_ = 32.0f;
+    MaterialID container_mat_id = AssetManager::storeAsset<Material>(container_material);
+    Model container_model{{{AssetManager::defaultMeshes().cube_, container_mat_id}}};
+    AssetManager::registerAsset<Model>("container_model", container_model);
+
+}
+
 int main() {
     /*
      * Game Intialization

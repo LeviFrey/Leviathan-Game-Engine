@@ -247,8 +247,6 @@ void AssetManager::processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& 
         
         // Fill the Material object, add it to the assets, and cache it
         MaterialID mat_id = storeAsset<Material>(std::move(newMaterial));
-        //materials_.push_back(std::move(newMaterial));
-        //mat_id = materials_.size()-1;
         context.material_cache_.insert({mesh->mMaterialIndex, mat_id});
     }
     

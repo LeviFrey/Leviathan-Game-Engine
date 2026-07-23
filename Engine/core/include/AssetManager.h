@@ -5,6 +5,8 @@
 #include <map>
 #include <vector>
 #include <filesystem>
+#include <iostream>
+#include <typeinfo>
 
 // from Engine
 #include "Mesh.h"
@@ -29,7 +31,7 @@ class AssetManager {
 private:
 
     struct DefaultShaders {
-        ShaderID fallback_;
+        ShaderID fallback_; // fallback
         ShaderID outline_;
         ShaderID skybox_;
         ShaderID noPostEffect_;
@@ -37,16 +39,16 @@ private:
     };
     
     struct DefaultGeometry {
-        MeshID cube_;
+        MeshID cube_; // fallback
         MeshID quad_;
     };
 
     struct DefaultTextures {
-        TextureID fallback_;
+        TextureID fallback_; // fallback
     };
 
     struct DefaultMaterials {
-        MaterialID textureless_;
+        MaterialID textureless_; //fallback
     };
 
 public:
@@ -55,8 +57,18 @@ public:
     
     // GET asset object from ID
     template <typename T>
-    static const T& getAssetFromID(AssetID<T> id) {
+    static const T& accessAsset(AssetID<T> id) {
         auto& asset_storage = getStorage<T>();
+        if (id.value >= asset_storage.data_.size()) {
+            std::cout 
+            << "Engine Error: Asset at id: " 
+            << id.value
+            << ", of type: "
+            << typeid(T).name()
+            << ", not found."
+            << std::endl;
+            return asset_storage.data_.at(0);
+        }
         return asset_storage.data_.at(id.value);
     }
 
@@ -75,7 +87,8 @@ public:
     static AssetID<T> storeAsset(T asset) {
         auto& asset_storage = getStorage<T>();
         asset_storage.data_.push_back(asset);
-        return {(uint32_t)asset_storage.data_.size()-1};
+        uint32_t id = asset_storage.data_.size()-1;
+        return {id};
     }
 
     // REGISTER assets with user-specific strings
@@ -89,8 +102,18 @@ public:
 
     // ACQUIRE asset id from user-specific name
     template <typename T>
-    static AssetID<T> getAssetFromName(std::string name) {
+    static AssetID<T> findAssetID(std::string name) {
         auto& asset_storage = getStorage<T>();
+        auto iter = asset_storage.registry_.find(name);
+        if (iter == asset_storage.registry_.end()) {
+            std::cout
+                << "Engine Error:"
+                << "registered asset with name: "
+                << name
+                << ", not found."
+                << std::endl;
+            return {0};
+        }
         return asset_storage.registry_.at(name);
     };
     

@@ -12,18 +12,22 @@ class Game;
 
 class GameObject {
     public:
-        void init(Game* game) { game_ = game; }
-        GameObject(Game* game) { init(game); }
+
+        GameObject(Game* game) { 
+            game_ = game; 
+        }
         GameObject() {}
+        void updateComponents();
+
         Game* getGame() const;
         void setGame(Game* game) { game_ = game; };
-        virtual void start() {}
-        void update();
+
         GameObject* getParent() const;
         const std::unordered_set<GameObject*>& getChildren() const;
         void addChild(GameObject* obj);
 
-        
+        virtual void init() {}
+
         template<typename T>
         T* getComponent() const {
             auto it = components_.find(std::type_index(typeid(T)));
