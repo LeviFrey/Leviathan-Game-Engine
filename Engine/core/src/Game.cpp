@@ -168,9 +168,6 @@ Game::Game(int window_width, int window_height) {
  * Only called once after all objects have been generated
  */
 void Game::Loop() {
-    for (GameObject* obj : game_objects_) {
-        obj->start();
-    }
 
     if (camera_ == nullptr) { std::cout << "Engine Error: No Camera Set" << std::endl; };
 
@@ -189,7 +186,7 @@ void Game::Loop() {
         DeltaClock::tick();
         // Update all game objects
         for (GameObject* obj : game_objects_) {
-            obj->update();
+            obj->updateComponents();
         }
 
         writeToUBOs();
@@ -249,8 +246,8 @@ void Game::drawScreenBuffer() {
     glDisable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    const Shader& shader = AssetManager::getShader(postEffect_);
-    const Mesh& quad = AssetManager::getMesh(AssetManager::defaultMeshes().quad_);
+    const Shader& shader = AssetManager::accessAsset<Shader>(postEffect_);
+    const Mesh& quad = AssetManager::accessAsset<Mesh>(AssetManager::defaultMeshes().quad_);
 
     shader.use();
     glBindTextureUnit((int)TextureBinding::PostProcess, buffer_texture_.ID_);
@@ -261,8 +258,8 @@ void Game::drawScreenBuffer() {
 
 void Game::drawSkybox() {
     glDepthFunc(GL_LEQUAL);
-    const Shader& shader = AssetManager::getShader(AssetManager::defaultShaders().skybox_);
-    const Mesh& mesh = AssetManager::getMesh(AssetManager::defaultMeshes().cube_);
+    const Shader& shader = AssetManager::accessAsset<Shader>(AssetManager::defaultShaders().skybox_);
+    const Mesh& mesh = AssetManager::accessAsset<Mesh>(AssetManager::defaultMeshes().cube_);
 
     shader.use();
     applyGlobalUniforms(shader);
@@ -273,7 +270,14 @@ void Game::drawSkybox() {
 }
 
 void Game::applyGlobalUniforms(const Shader& shader) {
-    const Texture& texture = AssetManager::getCubemap(skyboxTexture_);
-    glBindTextureUnit((int)TextureBinding::Skybox, texture.ID_);
+    if (hasSkybox_) {
+        const Texture& texture = AssetManager::accessAsset<Texture>(skyboxTexture_);
+        glBindTextureUnit((int)TextureBinding::Skybox, texture.ID_);
+    }
     shader.setFloat("time", glfwGetTime());
+}
+
+void Game::setCamera(Camera* camera) {
+    camera_ = camera;
+    //camera_->setAspectRatio((float)window_width_/(float)window_height_);
 }

@@ -5,7 +5,8 @@
 #include <map>
 #include <vector>
 #include <filesystem>
-#include <functional>
+#include <iostream>
+#include <typeinfo>
 
 // from Engine
 #include "Mesh.h"
@@ -30,7 +31,7 @@ class AssetManager {
 private:
 
     struct DefaultShaders {
-        ShaderID fallback_;
+        ShaderID fallback_; // fallback
         ShaderID outline_;
         ShaderID skybox_;
         ShaderID noPostEffect_;
@@ -38,30 +39,40 @@ private:
     };
     
     struct DefaultGeometry {
-        MeshID cube_;
+        MeshID cube_; // fallback
         MeshID quad_;
     };
 
     struct DefaultTextures {
-        TextureID fallback_;
+        TextureID fallback_; // fallback
     };
 
     struct DefaultMaterials {
-        MaterialID textureless_;
+        MaterialID textureless_; //fallback
     };
 
 public:
     static void init();
+
     
-    // Get assets from ID
-    static const Mesh& getMesh(MeshID id);
-    static const Texture& getTexture(TextureID id);
-    static const Material& getMaterial(MaterialID id);
-    static const Model& getModel(ModelID id);
-    static const Shader& getShader(ShaderID id);
-    static const Texture& getCubemap(TextureID id);
-    
-    // Load assets from Filesystem and emplace into AssetManager
+    // GET asset object from ID
+    template <typename T>
+    static const T& accessAsset(AssetID<T> id) {
+        auto& asset_storage = getStorage<T>();
+        if (id.value >= asset_storage.data_.size()) {
+            std::cout 
+            << "Engine Error: Asset at id: " 
+            << id.value
+            << ", of type: "
+            << typeid(T).name()
+            << ", not found."
+            << std::endl;
+            return asset_storage.data_.at(0);
+        }
+        return asset_storage.data_.at(id.value);
+    }
+
+    // LOAD and PROCESS assets from Filesystem and emplace into AssetManager
     static ModelID loadModel(const std::filesystem::path& path);
     static TextureID loadTexture(const std::filesystem::path& path);
     static TextureID loadCubemap(std::array<std::filesystem::path, 6> paths);
@@ -71,20 +82,46 @@ public:
             const std::filesystem::path& geometry_path = {});
 
     
-    // Store generated assets into global data 
-    static MeshID storeMesh(Mesh mesh);
-    static TextureID storeTexture(Texture texture);
-    static TextureID storeCubemap(Texture texture);
-    static MaterialID storeMaterial(Material material);
-    static ModelID storeModel(Model model);
-    static ShaderID storeShader(Shader shader);
+    // STORE asset for single-time use
+    template <typename T>
+    static AssetID<T> storeAsset(T asset) {
+        auto& asset_storage = getStorage<T>();
+        asset_storage.data_.push_back(asset);
+        uint32_t id = asset_storage.data_.size()-1;
+        return {id};
+    }
+
+    // REGISTER assets with user-specific strings
+    template <typename T>
+    static AssetID<T> registerAsset(std::string asset_name, T asset) {
+        auto& asset_storage = getStorage<T>();
+        AssetID<T> id = storeAsset<T>(asset);
+        asset_storage.registry_.insert({asset_name, id});
+        return id;
+    }
+
+    // ACQUIRE asset id from user-specific name
+    template <typename T>
+    static AssetID<T> findAssetID(std::string name) {
+        auto& asset_storage = getStorage<T>();
+        auto iter = asset_storage.registry_.find(name);
+        if (iter == asset_storage.registry_.end()) {
+            std::cout
+                << "Engine Error:"
+                << "registered asset with name: "
+                << name
+                << ", not found."
+                << std::endl;
+            return {0};
+        }
+        return asset_storage.registry_.at(name);
+    };
     
     // Get Preloaded assets
     static const DefaultShaders& defaultShaders() { return defaultShaders_; }
     static const DefaultGeometry& defaultMeshes() { return defaultGeometry_; }
     static const DefaultTextures& defaultTextures() { return defaultTextures_; }
     static const DefaultMaterials& defaultMaterials() { return defaultMaterials_; }
-
 
 private:
 
@@ -110,16 +147,6 @@ private:
                     other.geometry);
         }
     };
-    /*
-    struct ShaderKey {
-        std::string vertex_path;
-        std::string fragment_path;
-        bool operator<(const ShaderKey& other) const {
-            if (vertex_path != other.vertex_path) return vertex_path < other.vertex_path;
-            return fragment_path < other.fragment_path;
-        }
-    };
-    */
 
     struct CubemapKey {
         std::array<std::filesystem::path, 6> paths;
@@ -127,15 +154,22 @@ private:
             return paths < other.paths;
         }
     };
+ 
+    template <typename T>
+    struct AssetStorage {
+        std::vector<T> data_;
+        std::unordered_map<std::string, AssetID<T>> registry_;
+    };
+    
+    static AssetStorage<Mesh> mesh_storage_;
+    static AssetStorage<Texture> texture_storage_;
+    static AssetStorage<Material> material_storage_;
+    static AssetStorage<Shader> shader_storage_;
+    static AssetStorage<Model> model_storage_;
 
-    // Global Data Storage
-    static std::vector<Mesh> meshes_;
-    static std::vector<Texture> textures_;
-    static std::vector<Texture> cubemaps_;
-    static std::vector<Material> materials_;
-    static std::vector<Model> models_;
-    static std::vector<Shader> shaders_;
-
+    template <typename T>
+    static AssetStorage<T>& getStorage();
+     
     // Data Caches
     static std::map<std::string, TextureID> texture_cache_;
     static std::map<CubemapKey, TextureID> cubemap_cache_;
@@ -143,7 +177,7 @@ private:
     static std::map<ShaderKey, ShaderID> shader_cache_;
 
     // Model loading
-    static ModelID loadModelFromFile(const std::filesystem::path& path);
+    static ModelID processModelFromFile(const std::filesystem::path& path);
     static void processNode(aiNode* node, const aiScene* scene, LoadContext& context);
     static void processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& context);
     static TextureID loadMaterialTextures(

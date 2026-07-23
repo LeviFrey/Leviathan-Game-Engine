@@ -10,12 +10,11 @@
 #include <glm/glm.hpp>
 
 
-std::vector<Mesh> AssetManager::meshes_;
-std::vector<Texture> AssetManager::textures_;
-std::vector<Texture> AssetManager::cubemaps_;
-std::vector<Material> AssetManager::materials_;
-std::vector<Model> AssetManager::models_;
-std::vector<Shader> AssetManager::shaders_;
+AssetManager::AssetStorage<Mesh> AssetManager::mesh_storage_;
+AssetManager::AssetStorage<Texture> AssetManager::texture_storage_;
+AssetManager::AssetStorage<Material> AssetManager::material_storage_;
+AssetManager::AssetStorage<Shader> AssetManager::shader_storage_;
+AssetManager::AssetStorage<Model> AssetManager::model_storage_;
 
 std::map<AssetManager::ShaderKey, ShaderID> AssetManager::shader_cache_;
 std::map<std::string, ModelID> AssetManager::model_cache_;
@@ -27,6 +26,16 @@ AssetManager::DefaultGeometry AssetManager::defaultGeometry_;
 AssetManager::DefaultTextures AssetManager::defaultTextures_;
 AssetManager::DefaultMaterials AssetManager::defaultMaterials_;
 
+template<> 
+AssetManager::AssetStorage<Mesh>& AssetManager::getStorage() { return mesh_storage_; }
+template<> 
+AssetManager::AssetStorage<Texture>& AssetManager::getStorage() { return texture_storage_; }
+template<> 
+AssetManager::AssetStorage<Material>& AssetManager::getStorage() { return material_storage_; }
+template<> 
+AssetManager::AssetStorage<Shader>& AssetManager::getStorage() { return shader_storage_; }
+template<> 
+AssetManager::AssetStorage<Model>& AssetManager::getStorage() { return model_storage_; }
 
 void AssetManager::init() {
     /*
@@ -57,14 +66,14 @@ void AssetManager::init() {
     /*
      *  Load Engine Geometry
      */
-    defaultGeometry_.cube_ = storeMesh(Shapes::createCube(1.0f));
-    defaultGeometry_.quad_ = storeMesh(Shapes::createQuad());
+    defaultGeometry_.cube_ = storeAsset<Mesh>(Shapes::createCube(1.0f));
+    defaultGeometry_.quad_ = storeAsset<Mesh>(Shapes::createQuad());
 
     /*
      *  Load Engine Textures
      */
     unsigned char black[] = {0,0,0,0};
-    defaultTextures_.fallback_ = storeTexture(TextureLoader::loadTextureFromData(
+    defaultTextures_.fallback_ = storeAsset<Texture>(TextureLoader::loadTextureFromData(
                 black, 
                 1, 
                 1,
@@ -74,71 +83,9 @@ void AssetManager::init() {
     /*
      * Load Engine Materials
      */
-    defaultMaterials_.textureless_ = storeMaterial({});
+    defaultMaterials_.textureless_ = storeAsset<Material>({});
     
 }
-
-/*
- *  Get assets from ID
- */
-
-const Mesh& AssetManager::getMesh(MeshID id) {
-    return meshes_.at(id);    
-}
-
-const Texture& AssetManager::getTexture(TextureID id) {
-    return textures_.at(id);
-}
-
-const Texture& AssetManager::getCubemap(TextureID id) {
-    return cubemaps_.at(id);
-}
-
-const Material& AssetManager::getMaterial(MaterialID id) {
-    return materials_.at(id);
-}
-
-const Model& AssetManager::getModel(ModelID id) {
-    return models_.at(id);
-}
-
-const Shader& AssetManager::getShader(ShaderID id) {
-    return shaders_.at(id);
-}
-
-/*
- *  Store Assets
- */
-MeshID AssetManager::storeMesh(Mesh mesh) {
-    meshes_.push_back(mesh);
-    return (MeshID)meshes_.size()-1;
-}
-
-MaterialID AssetManager::storeMaterial(Material material) {
-    materials_.push_back(material);
-    return (MaterialID)materials_.size()-1;
-}
-
-ModelID AssetManager::storeModel(Model model) {
-    models_.push_back(model);
-    return (ModelID)models_.size()-1;
-}
-
-TextureID AssetManager::storeTexture(Texture texture) {
-    textures_.push_back(texture);
-    return (TextureID)textures_.size()-1;
-}
-
-TextureID AssetManager::storeCubemap(Texture texture) {
-    cubemaps_.push_back(texture);
-    return (TextureID)cubemaps_.size()-1;
-}
-
-ShaderID AssetManager::storeShader(Shader shader) {
-    shaders_.push_back(shader);
-    return (ShaderID)shaders_.size()-1;
-}
-
 
 /*
  *  Load asset for the first time or pull from cache if already loaded somewherer else
@@ -149,7 +96,7 @@ ModelID AssetManager::loadModel(const std::filesystem::path& path) {
     if (it != model_cache_.end()) {
         return it->second;
     } else {
-        return loadModelFromFile(path); 
+        return processModelFromFile(path); 
     }
 }
 
@@ -158,7 +105,7 @@ TextureID AssetManager::loadTexture(const std::filesystem::path& path) {
     if (it != texture_cache_.end()) {
         return it->second;
     } else {
-        TextureID id = storeTexture(TextureLoader::loadTextureFromFile(path, {}));
+        TextureID id = storeAsset<Texture>(TextureLoader::loadTextureFromFile(path, {}));
         texture_cache_.insert({path.string(), id});
         return id;
     }
@@ -169,8 +116,8 @@ TextureID AssetManager::loadCubemap(std::array<std::filesystem::path, 6> paths) 
     if (it != cubemap_cache_.end()) {
         return it->second;
     } else {
-        TextureID id = storeCubemap(TextureLoader::loadCubemapFromFile(paths));
-        cubemap_cache_.insert({{paths}, id});
+        TextureID id = storeAsset<Texture>(TextureLoader::loadCubemapFromFile(paths));
+cubemap_cache_.insert({{paths}, id});
         return id;
     }
 }
@@ -187,7 +134,7 @@ ShaderID AssetManager::loadShader(
     if(it != shader_cache_.end()) {
         return it->second;
     } else {
-        ShaderID id = storeShader(ShaderLoader::loadShaderFromFile(
+        ShaderID id = storeAsset<Shader>(ShaderLoader::loadShaderFromFile(
                     vertex_path, 
                     fragment_path,
                     geometry_path));
@@ -204,7 +151,7 @@ ShaderID AssetManager::loadShader(
  * Model Loading Pipeline Code
  */
 
-ModelID AssetManager::loadModelFromFile(const std::filesystem::path& path) {
+ModelID AssetManager::processModelFromFile(const std::filesystem::path& path) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate /*| aiProcess_FlipUVs*/);
 
@@ -215,9 +162,10 @@ ModelID AssetManager::loadModelFromFile(const std::filesystem::path& path) {
     LoadContext context;
     context.directory_ = path.parent_path();
     processNode(scene->mRootNode, scene, context);
-    models_.push_back(std::move(context.model_));
-    model_cache_.insert({path.string(), models_.size()-1});
-    return (ModelID)models_.size()-1;
+    ModelID id = storeAsset<Model>(context.model_);
+    //models_.push_back(std::move(context.model_));
+    model_cache_.insert({path.string(), id});
+    return id;
 }
 
 
@@ -271,8 +219,7 @@ void AssetManager::processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& 
     }
     
     // Create the new mesh and assign it an ID
-    meshes_.push_back({vertices, indices});
-    MeshID mesh_id = meshes_.size()-1;
+    MeshID mesh_id = storeAsset<Mesh>({vertices, indices});
 
     auto it = context.material_cache_.find(mesh->mMaterialIndex);
     MaterialID mat_id;
@@ -299,8 +246,7 @@ void AssetManager::processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& 
         }
         
         // Fill the Material object, add it to the assets, and cache it
-        materials_.push_back(std::move(newMaterial));
-        mat_id = materials_.size()-1;
+        MaterialID mat_id = storeAsset<Material>(std::move(newMaterial));
         context.material_cache_.insert({mesh->mMaterialIndex, mat_id});
     }
     

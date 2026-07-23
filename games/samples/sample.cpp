@@ -1,200 +1,100 @@
 #include "Engine.h"
-#include "../behaviors/Flashlight.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp>
 
-/*
- * Sample Game Object Behaviors
- */
-class OutlineBehavior : public Component {
+class FlashLightController : public Component {
     public:
-    void init() override {
-        Renderer* r = getGameObject()->getComponent<Renderer>();
-        r->getOutlineConfig().color_ = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    }
-    void update() override {
-        KeyboardHandler* k = getGameObject()->getGame()->getKeyboardHandler();
-        if (k->getKeyDown(GLFW_KEY_O)) {
-            outlined = !outlined;
-            Renderer* r = getGameObject()->getComponent<Renderer>();
-            if (outlined) {
-                r->getOutlineConfig().active_ = true;
-            } else {
-                r->getOutlineConfig().active_ = false;
-            }
+        void update() override {
+            SpotLight* sl = getGameObject()->getComponent<SpotLight>();
+            Transform* t = getGameObject()->getComponent<Transform>();
+            sl->setDirection(t->getWorldRotation() * glm::vec3(1.0f, 0.0f, 0.0));
         }
-    }
-    bool outlined = false;
 };
 
-class FlashLight : public Component {
+class FlashLight : public GameObject {
     public:
-    void init() override {
-        SpotLight* sl = getGameObject()->getComponent<SpotLight>();
-        sl->flipOnOff();
-    }
-    void update() override {
-        KeyboardHandler* k = getGameObject()->getGame()->getKeyboardHandler();
-        SpotLight* sl = getGameObject()->getComponent<SpotLight>();
-        if (k->getKeyDown(GLFW_KEY_F)) {
-            sl->flipOnOff();
+        FlashLight(Game* game) : GameObject(game) {
+            addComponent<Transform>();
+            addComponent<FlashLightController>();
+            addComponent<SpotLight>();
         }
-        Transform* t = getGameObject()->getComponent<Transform>();
-        sl->setDirection(t->getWorldRotation() * glm::vec3(1.0f, 0.0f, 0.0f));
-    }
-    bool on_ = false;
 };
+
+class Container : public GameObject {
+    public:
+        Container(Game* game) : GameObject(game) {
+            addComponent<Transform>();
+            ModelID mod_id = AssetManager::findAssetID<Model>("container_model");
+            ShaderID shader_id = AssetManager::findAssetID<Shader>("phong_shader");
+            addComponent<Renderer>(mod_id, shader_id);
+        }
+};
+
+class ModelObject : public GameObject {
+    public:
+        ModelObject(Game* game, std::filesystem::path obj_path) : GameObject(game) {
+            addComponent<Transform>();
+            ModelID mod_id = AssetManager::loadModel(obj_path);
+            ShaderID shader_id = AssetManager::findAssetID<Shader>("phong_shader");
+            addComponent<Renderer>(mod_id, shader_id);
+        }
+};
+
+
+void genShaders() {
+    Shader shader = ShaderLoader::loadShaderFromFile(
+        PathUtils::shaderDir / "phong/phong.vert",
+        PathUtils::shaderDir / "phong/phong.frag");
+    AssetManager::registerAsset<Shader>("phong_shader", shader);
+}
+
+void genContainerAssets() {
+    TextureID diffuse = AssetManager::loadTexture(
+            PathUtils::textureDir / "container2.jpg");
+    TextureID specular = AssetManager::loadTexture(
+            PathUtils::textureDir / "container2_specular.jpg");
+    
+    Material mat;
+    mat.diffuse_ = diffuse;
+    mat.specular_ = specular;
+    mat.shininess_ = 32.0f;
+    MaterialID mat_id = AssetManager::storeAsset<Material>(mat);
+
+    Model model({{{AssetManager::defaultMeshes().cube_, mat_id}}}); 
+    AssetManager::registerAsset<Model>("container_model", model);
+}
 
 int main() {
-    /*
-     * Game Intialization
-     */
     int window_width = 1000;
     int window_height = 1000;
     Game game(window_width, window_height);
 
-    /*
-     * Load needed Assets
-     */
+    genContainerAssets();
+    genShaders();
 
-    // Shaders
-    ShaderID flatShader = AssetManager::loadShader(
-            PathUtils::shaderDir / "flat/flat.vert",
-            PathUtils::shaderDir / "flat/flat.frag");
-    ShaderID phongShader = AssetManager::loadShader(
-            PathUtils::shaderDir / "phong/phong.vert",
-            PathUtils::shaderDir / "phong/phong.frag");
-    ShaderID blurEffectShader = AssetManager::loadShader(
-            PathUtils::shaderDir / "postprocess/screen.vert",
-            PathUtils::shaderDir / "postprocess/blurScreen.frag");
-    ShaderID reflectShader = AssetManager::loadShader(
-            PathUtils::shaderDir / "reflect/reflect.vert",
-            PathUtils::shaderDir / "reflect/reflect.frag");
-    ShaderID explodeShader = AssetManager::loadShader(
-            PathUtils::shaderDir / "explode/explode.vert",
-            PathUtils::shaderDir / "explode/explode.frag",
-            PathUtils::shaderDir / "explode/explode.geom");
-    //game.setPostProcessingEffect(blurEffectShader);
-    
-    // Textures
-    TextureID containerDiffuse = AssetManager::loadTexture(
-            PathUtils::textureDir / "container2.jpg");
-    TextureID containerSpecular = AssetManager::loadTexture(
-            PathUtils::textureDir / "container2_specular.jpg");
-    TextureID grassDiffuse = AssetManager::loadTexture(
-            PathUtils::textureDir / "grass15.png");
-
-    std::filesystem::path cubeDir = PathUtils::textureDir / "sky";
-    TextureID skyCubemap = AssetManager::loadCubemap(
-            {cubeDir / "right.jpg", cubeDir / "left.jpg", 
-            cubeDir / "top.jpg", cubeDir / "bottom.jpg",
-            cubeDir / "front.jpg", cubeDir / "back.jpg"});
-    game.setSkybox(skyCubemap);
-    
-    // Materials
-    Material containerMaterial;
-    containerMaterial.diffuse_ = containerDiffuse;
-    containerMaterial.specular_ = containerSpecular;
-    containerMaterial.shininess_ = 32.0f;
-
-    float floorSize = 10000.0f;
-    float tileSize = 4.0f;
-    Material grassMaterial;
-    grassMaterial.diffuse_ = grassDiffuse;
-    grassMaterial.shininess_ = 32.0f;
-    grassMaterial.tesselationRate_ = floorSize / tileSize;
-
-    MaterialID containerMatID = AssetManager::storeMaterial(containerMaterial);
-    MaterialID grassMatID = AssetManager::storeMaterial(grassMaterial);
-
-    // Meshes
-    MeshID floorMesh = AssetManager::storeMesh(Shapes::createPlane(1, 1, floorSize, floorSize));
-
-    // Models
-    ModelID backpackModel = AssetManager::loadModel(PathUtils::objectDir / "backpack/backpack.obj");
-    ModelID containerModel = AssetManager::storeModel({{
-            {AssetManager::defaultMeshes().cube_, containerMatID}
-            }});
-    ModelID cubeModel = AssetManager::storeModel({{
-            {AssetManager::defaultMeshes().cube_, AssetManager::defaultMaterials().textureless_}
-            }});
-    ModelID floorModel = AssetManager::storeModel({{
-            {floorMesh, grassMatID}
-            }});
-    
-    // Game Objects
-    GameObject lightCube(&game);
-    GameObject backpack(&game);
-    GameObject container(&game);
-    GameObject mirrorContainer(&game);
-    GameObject floor(&game);
-    GameObject flashlight(&game);
-    GameObject sunlight(&game);
-    GameObject camera(&game);
-
-    Transform* t;
-    Renderer* r;
-   
-    /*
-     * Describe Scene
-     */
-
-    // light cube
-    t = lightCube.addComponent<Transform>();
-    t->translate(glm::vec3(10.0f, -1.0f, 0.0f));
-    r = lightCube.addComponent<Renderer>(cubeModel, AssetManager::defaultShaders().fallback_);
-    AreaLight* l = lightCube.addComponent<AreaLight>();
-    game.addGameObject(&lightCube);
-    game.addLightSource(l);
-
-    // backpack
-    t = backpack.addComponent<Transform>();
-    r = backpack.addComponent<Renderer>(backpackModel, phongShader);
-    //r->getDebugConfig().visualizeNormals_ = true;
-    t->translate(glm::vec3(10.0f, -1.0f, -5.0f));
-    game.addGameObject(&backpack);
-
-    // container
-    t = container.addComponent<Transform>();
-    r = container.addComponent<Renderer>(containerModel, phongShader);
-    t->translate(glm::vec3(10.0f, -1.0f, 5.0f));
-    t->scale(glm::vec3(4.0f, 4.0f, 4.0f));
-    container.addComponent<OutlineBehavior>();
+    // Container instance creation
+    Container container(&game);
     game.addGameObject(&container);
-
-    // floor
-    t = floor.addComponent<Transform>();
-    r = floor.addComponent<Renderer>(floorModel, phongShader);
-    t->translate(glm::vec3(01.0f, -3.0f, 0.0f));
-    game.addGameObject(&floor);
-
-    // flashlight
-    t = flashlight.addComponent<Transform>();
-    SpotLight* s = flashlight.addComponent<SpotLight>();
-    flashlight.addComponent<FlashLight>();
-    camera.addChild(&flashlight);
-    game.addGameObject(&flashlight);
-    game.addLightSource(s);
-
-    // mirror
-    t = mirrorContainer.addComponent<Transform>();
-    t->translate(glm::vec3(1.0f, -1.0f, 7.0f));
-    t->scale(glm::vec3(4,4,4));
-    r = mirrorContainer.addComponent<Renderer>(containerModel, reflectShader);
-    game.addGameObject(&mirrorContainer);
+    Transform* t = container.getComponent<Transform>();
+    t->translate(glm::vec3(5.0f, 0.0f, 0.0f));
     
-    // sunlight source
-    DirectionalLight* d = sunlight.addComponent<DirectionalLight>();
-    game.addLightSource(d);
-    game.addGameObject(&sunlight);
-
-    // camera
+    // Backpack instance creation (Uses chosen obj file)
+    ModelObject backpack(&game, PathUtils::objectDir / "backpack/backpack.obj");
+    game.addGameObject(&backpack);
+    t = backpack.getComponent<Transform>();
+    t->translate(glm::vec3(2.0f, 0.0f, 5.0f));
+    
+    // Camera setup
+    GameObject camera(&game);
     t = camera.addComponent<Transform>();
-    FreeCamera* c = camera.addComponent<FreeCamera>();
-    c->setAspectRatio((float)window_width/(float)window_height);
-    game.setCamera(c);
+    game.setCamera(camera.addComponent<FreeCamera>());
     game.addGameObject(&camera);
+    
+    // mount a flashlight holding position
+    FlashLight fl(&game);
+    game.addGameObject(&fl);
+    camera.addChild(&fl);
+    t = fl.getComponent<Transform>();
+    t->translate(glm::vec3(0.0f, 0.0f, 0.5f));
+    game.addLightSource(fl.getComponent<SpotLight>());
 
     game.Loop();
-    
 }

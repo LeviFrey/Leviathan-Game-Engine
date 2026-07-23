@@ -17,7 +17,7 @@ const std::unordered_set<GameObject*>& GameObject::getChildren() const {
     return children_;
 }
 
-void GameObject::update() {
+void GameObject::updateComponents() {
     for (auto& [type, component] : components_) {
         component->update();
     }

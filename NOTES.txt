@@ -30,3 +30,9 @@ Working on moving keyboard/mouse information to seperate classes so not stored i
 
  7/16/26
  - equirectToCube works now, but cubemaps are stored and loaded as very large Jpg. At some point consider using GPU friendly conversion methods. But would have to stop using stb_image because it can't load these image types.
+
+--- Error Message ---
+ENGINE ERROR: "description"
+
+--- Status Message ---
+-- "description"
