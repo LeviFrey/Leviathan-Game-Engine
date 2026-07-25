@@ -178,6 +178,14 @@ int main() {
     getFloorAssets();
     genShaders();
 
+    std::filesystem::path path = PathUtils::textureDir / "sky";
+    Texture skymap = TextureLoader::loadCubemapFromFile({
+            path / "right.jpg", path / "left.jpg",
+            path / "top.jpg", path / "bottom.jpg",
+            path / "front.jpg", path / "back.jpg"});
+    TextureID skymap_id = AssetManager::storeAsset<Texture>(skymap);
+    game.setSkybox(skymap_id);
+
     // Container instance creation
     SimpleObject container(&game, "container_model", "phong_shader");
     game.addGameObject(&container);

@@ -52,7 +52,7 @@ class TextureLoader {
         static Texture loadHDRTextureFromFile(
                 const std::filesystem::path& path,
                 HDRFromFileContext context);
-
+ 
 
         // posx, negx, posy, negy, posz, negz
         static Texture loadCubemapFromFile(
