@@ -22,11 +22,9 @@ class Camera : public Component {
 
         glm::mat4 getView();
         glm::mat4 getProjection();
-        glm::vec3 getFront();
-        glm::vec3 getPosition();
-        float getPitch() { return pitch_; }
-        float getYaw() { return yaw_; }
         CameraData getData();
+        virtual glm::vec3 getFront();
+        virtual glm::vec3 getPosition();
 
         void setSensitivity(float sensitivity) { sensitivity_ = sensitivity; }
         void setAspectRatio(float ratio) { aspect_ratio_ = ratio; }
@@ -35,8 +33,6 @@ class Camera : public Component {
         float fov_;
         float sensitivity_;
         glm::vec3 up_;
-        float yaw_ = 0;
-        float pitch_ = 0;
         float aspect_ratio_;
         float zNear_;
         float zFar_;

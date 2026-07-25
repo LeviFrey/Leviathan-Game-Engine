@@ -14,7 +14,12 @@ class FreeCamera : public Camera {
         : Camera(sensitivity, fov, aspect_ratio, zNear, zFar), speed_(speed) {}
 
         void update() override;
+        float getYaw() { return yaw_; }
+        float getPitch() { return pitch_; }
+
     private:
         float speed_;
+        float yaw_;
+        float pitch_;
 };
 

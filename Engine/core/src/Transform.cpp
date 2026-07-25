@@ -4,6 +4,7 @@
 
 void Transform::translate(glm::vec3 translation) {
     position_ += translation;
+    makeDirty();
 }
 
 void Transform::rotate(float radians, glm::vec3 axis) {

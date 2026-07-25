@@ -11,8 +11,8 @@ void FreeCamera::update() {
     MouseHandler* mh = getGameObject()->getGame()->getMouseHandler();
     Transform* t = getGameObject()->getComponent<Transform>();
     
-    yaw_ += mh->getMouseXOffset() * sensitivity_;
-    pitch_ -= mh->getMouseYOffset() * sensitivity_;
+    yaw_ = mh->getMouseXOffset() * sensitivity_;
+    pitch_ = mh->getMouseYOffset() * sensitivity_;
     
     if (pitch_ > 89.0f) { pitch_ = 89.0f; }
     if (pitch_ < -89.0f) { pitch_ = -89.0f; }
