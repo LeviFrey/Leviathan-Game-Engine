@@ -8,8 +8,9 @@
 
 Renderer::Renderer(ModelID model_id, ShaderID shader_id) : 
     model_id_(model_id),
-    shader_id_(shader_id)
-{}
+    shader_id_(shader_id) {
+    setting_ = AssetManager::defaultRDC();
+}
 
 void Renderer::render() {
     const Shader& shader = AssetManager::accessAsset<Shader>(shader_id_);
@@ -63,9 +64,22 @@ void Renderer::useMaterial(const Material& material, const Shader& shader) {
 }
 
 void Renderer::drawMesh(const Mesh& mesh) {
-    glBindVertexArray(mesh.VAO_);
+    RenderDataConfig& rdc = AssetManager::accessAsset<RenderDataConfig>(setting_);
+    rdc.bind();
+    glBindVertexBuffer(
+        0,
+        mesh.VBO_,
+        0,
+        sizeof(Vertex)
+    );
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
     glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+    /*
+    glBindVertexArray(VAO_);
+    glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    */
 }
 
 void Renderer::drawOutline(const Shader& shader, const Mesh& mesh, glm::mat4 transform) {

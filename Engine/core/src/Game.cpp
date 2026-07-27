@@ -89,7 +89,8 @@ Game::Game(int window_width, int window_height) {
     }   
     
     glViewport(0, 0, window_width_, window_height_);
-
+    
+    // Initialize rendering state
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0x00);
@@ -106,16 +107,9 @@ Game::Game(int window_width, int window_height) {
     glfwSetKeyCallback(window_, Game::keyCallback);
     glfwSetCursorPosCallback(window_, Game:: mouseMoveCallback);
 
-    // Create important game objects:
+    // Intialize input handlers:
     mouse_handler_ = MouseHandler();
     keyboard_handler_ = KeyboardHandler(); 
-    /*
-    camera_.setGame(this);
-    camera_.addComponent<Transform>();
-    Camera* c = camera_.addComponent<Camera>();
-    c->setAspectRatio((float)window_width_ / (float)window_height_);
-    */
-    
     
     // Gather Assets
     PathUtils::init();
@@ -159,7 +153,7 @@ Game::Game(int window_width, int window_height) {
         std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    
     postEffect_ = AssetManager::defaultShaders().noPostEffect_;
 }
 
@@ -190,9 +184,15 @@ void Game::Loop() {
         }
 
         writeToUBOs();
+        
+        bool useFrameBuffer = true;
 
         // Draw to frame buffer for cool post processing effects
-        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+        if (useFrameBuffer) {
+            glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+        } else {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
 
         // Reset Graphics buffers/masks for clean rendering
         glStencilMask(0xFF);
@@ -209,7 +209,9 @@ void Game::Loop() {
             }
         }
         if (hasSkybox_) { drawSkybox();}
-        drawScreenBuffer();
+
+        if (useFrameBuffer)
+            drawScreenBuffer();
 
         // call debug function
         if (debugFunction_) {
@@ -251,7 +253,11 @@ void Game::drawScreenBuffer() {
 
     shader.use();
     glBindTextureUnit((int)TextureBinding::PostProcess, buffer_texture_.ID_);
-    glBindVertexArray(quad.VAO_);
+    RenderDataConfig& rdc = AssetManager::accessAsset<RenderDataConfig>(AssetManager::defaultRDC());
+    rdc.bind();
+    glBindVertexBuffer(0, quad.VBO_, 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad.EBO_);
+    //glBindVertexArray(quad.VAO_);
     glDrawElements(GL_TRIANGLES, quad.indices_.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
@@ -263,7 +269,11 @@ void Game::drawSkybox() {
 
     shader.use();
     applyGlobalUniforms(shader);
-    glBindVertexArray(mesh.VAO_);
+    RenderDataConfig& rdc = AssetManager::accessAsset<RenderDataConfig>(AssetManager::defaultRDC());
+    rdc.bind();
+    glBindVertexBuffer(0, mesh.VBO_, 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
+    //glBindVertexArray(mesh.VAO_);
     glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     glDepthFunc(GL_LESS);

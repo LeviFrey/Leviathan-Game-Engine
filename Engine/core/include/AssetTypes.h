@@ -6,6 +6,7 @@ struct Mesh;
 struct Texture;
 struct Material;
 struct Shader;
+class RenderDataConfig;
 
 template <typename T>
 struct AssetID {
@@ -17,4 +18,5 @@ using MeshID     = AssetID<Mesh>;
 using TextureID  = AssetID<Texture>;
 using MaterialID = AssetID<Material>;
 using ShaderID   = AssetID<Shader>;
+using RenderDataConfigID      = AssetID<RenderDataConfig>;
 

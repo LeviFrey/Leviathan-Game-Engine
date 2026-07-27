@@ -106,7 +106,12 @@ int main(int argc, char* args[]) {
     glViewport(0,0,size,size);
     shader.use();
     shader.setMat4("projection", projection);
-    glBindVertexArray(mesh.VAO_);
+    RenderDataConfig config;
+    config.init();
+    config.bind();
+    glBindVertexBuffer(0, mesh.VBO_, 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
+    //glBindVertexArray(mesh.VAO_);
     glActiveTexture(GL_TEXTURE0);
     shader.setInt("equirectTexture", 0);
     glBindTexture(GL_TEXTURE_2D, equirectTexture.ID_);

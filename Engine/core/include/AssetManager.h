@@ -15,6 +15,7 @@
 #include "Model.h"
 #include "AssetTypes.h"
 #include "Material.h"
+#include "Components/Renderer.h"
 
 // Used for Assimp
 #include <assimp/Importer.hpp>
@@ -51,13 +52,15 @@ private:
         MaterialID textureless_; //fallback
     };
 
+    static RenderDataConfigID default_rdc_;
+
 public:
     static void init();
 
     
     // GET asset object from ID
     template <typename T>
-    static const T& accessAsset(AssetID<T> id) {
+    static T& accessAsset(AssetID<T> id) {
         auto& asset_storage = getStorage<T>();
         if (id.value >= asset_storage.data_.size()) {
             std::cout 
@@ -122,6 +125,7 @@ public:
     static const DefaultGeometry& defaultMeshes() { return defaultGeometry_; }
     static const DefaultTextures& defaultTextures() { return defaultTextures_; }
     static const DefaultMaterials& defaultMaterials() { return defaultMaterials_; }
+    static const RenderDataConfigID defaultRDC() { return default_rdc_; }
 
 private:
 
@@ -166,6 +170,7 @@ private:
     static AssetStorage<Material> material_storage_;
     static AssetStorage<Shader> shader_storage_;
     static AssetStorage<Model> model_storage_;
+    static AssetStorage<RenderDataConfig> rdc_storage_;
 
     template <typename T>
     static AssetStorage<T>& getStorage();

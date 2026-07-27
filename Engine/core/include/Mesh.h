@@ -16,7 +16,7 @@ class Mesh {
         void setUpMesh();
 
         unsigned int VBO_;
-        unsigned int VAO_;
+        //unsigned int VAO_;
         unsigned int EBO_;
         vector<Vertex> vertices_;
         vector<unsigned int> indices_;

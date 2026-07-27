@@ -15,6 +15,7 @@ AssetManager::AssetStorage<Texture> AssetManager::texture_storage_;
 AssetManager::AssetStorage<Material> AssetManager::material_storage_;
 AssetManager::AssetStorage<Shader> AssetManager::shader_storage_;
 AssetManager::AssetStorage<Model> AssetManager::model_storage_;
+AssetManager::AssetStorage<RenderDataConfig> AssetManager::rdc_storage_;
 
 std::map<AssetManager::ShaderKey, ShaderID> AssetManager::shader_cache_;
 std::map<std::string, ModelID> AssetManager::model_cache_;
@@ -25,6 +26,7 @@ AssetManager::DefaultShaders AssetManager::defaultShaders_;
 AssetManager::DefaultGeometry AssetManager::defaultGeometry_;
 AssetManager::DefaultTextures AssetManager::defaultTextures_;
 AssetManager::DefaultMaterials AssetManager::defaultMaterials_;
+RenderDataConfigID AssetManager::default_rdc_;
 
 template<> 
 AssetManager::AssetStorage<Mesh>& AssetManager::getStorage() { return mesh_storage_; }
@@ -36,11 +38,12 @@ template<>
 AssetManager::AssetStorage<Shader>& AssetManager::getStorage() { return shader_storage_; }
 template<> 
 AssetManager::AssetStorage<Model>& AssetManager::getStorage() { return model_storage_; }
+template<>
+AssetManager::AssetStorage<RenderDataConfig>& AssetManager::getStorage() { return rdc_storage_; }
 
 void AssetManager::init() {
-    /*
-     *  Load Engine Shader
-     */
+    
+    // -- Compile default Engine Shaders --
     defaultShaders_.fallback_ = loadShader(
             PathUtils::shaderDir / "default/default.vert",
             PathUtils::shaderDir / "default/default.frag");
@@ -63,15 +66,11 @@ void AssetManager::init() {
             PathUtils::shaderDir / "normal/normal.geom");
 
 
-    /*
-     *  Load Engine Geometry
-     */
+    // -- Generate standard engine models --
     defaultGeometry_.cube_ = storeAsset<Mesh>(Shapes::createCube(1.0f));
     defaultGeometry_.quad_ = storeAsset<Mesh>(Shapes::createQuad());
 
-    /*
-     *  Load Engine Textures
-     */
+    // -- Generate fallback texture -- 
     unsigned char black[] = {0,0,0,0};
     defaultTextures_.fallback_ = storeAsset<Texture>(TextureLoader::loadTextureFromData(
                 black, 
@@ -80,12 +79,15 @@ void AssetManager::init() {
                 {}
                 ));
 
-    /*
-     * Load Engine Materials
-     */
+    // -- Generate fallback material (uses fallback textures) -- 
     defaultMaterials_.textureless_ = storeAsset<Material>({});
-    
+
+    // -- Default rendering data config (posistion, normal, texCoords) --
+    RenderDataConfig rdc;
+    rdc.init();
+    default_rdc_ = storeAsset<RenderDataConfig>(rdc);
 }
+
 
 /*
  *  Load asset for the first time or pull from cache if already loaded somewherer else

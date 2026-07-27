@@ -11,12 +11,13 @@
 // From Engine
 #include "Input/MouseHandler.h"
 #include "Input/KeyboardHandler.h"
-#include "GameObject.h"
 #include "Components/Camera.h"
-#include "Shader.h"
+#include "Components/Renderer.h"
 #include "Components/LightSource.h"
+#include "Shader.h"
 #include "Texture.h"
 #include "AssetTypes.h"
+#include "GameObject.h"
 
 class Game {
     public:
@@ -45,31 +46,34 @@ class Game {
         void addLightSource(LightSource* light);
         void applyGlobalUniforms(const Shader& shader);
     private:
-
-
+        // -- Window config --
         int window_width_;
         int window_height_;
-
+        std::function<void(Game&)> debugFunction_;
+        
+        // -- GLFW library stuff --
         GLFWwindow* window_;
         
+        // -- Handlers --
         MouseHandler mouse_handler_;
         KeyboardHandler keyboard_handler_;
-        // Game objects
+
+        //  -- Game object handling --
         std::vector<GameObject*> game_objects_;
         std::vector<LightSource*> light_sources_;
         Camera* camera_;
-
+        
+        // -- Global data UBOs --
         GLuint lightUBO_;
         GLuint cameraUBO_;
-        std::function<void(Game&)> debugFunction_;
         
-        // used for frame buffering
+        // -- Frame Buffer config -- 
         ShaderID postEffect_;
         unsigned int frame_buffer_;
         unsigned int rbo_;
         Texture buffer_texture_;
 
-        // used for skybox
+        // -- skybox config --
         TextureID skyboxTexture_;
         bool hasSkybox_ = false;
 

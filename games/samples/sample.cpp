@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "PlayerController.h"
 
 
 /*
@@ -16,7 +17,7 @@ class FlashLightController : public Component {
 void printvec(glm::vec3 vec) {
     std::cout << vec.x << " " << vec.y << " " << vec.z << std::endl;
 }
-
+/*
 class PlayerController : public Component {
     public:
         float move_speed_;
@@ -57,20 +58,8 @@ class PlayerController : public Component {
             }
         }      
 };
+*/
 
-class PlayerFPSCamera : public Camera {
-    public:
-        glm::vec3 getFront() override { 
-            GameObject* parent = getGameObject()->getParent();
-            PlayerController* pc = parent->getComponent<PlayerController>();
-            return pc->look_direction_;
-        }
-        glm::vec3 getPosition() override {
-            Transform* t = getGameObject()->getComponent<Transform>();
-            return t->getWorldPosition();
-        }
-
-};
 /*
  *  PREFAB DEFINITIONS
  */
