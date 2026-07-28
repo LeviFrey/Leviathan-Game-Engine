@@ -66,13 +66,8 @@ void Renderer::useMaterial(const Material& material, const Shader& shader) {
 void Renderer::drawMesh(const Mesh& mesh) {
     RenderDataConfig& rdc = AssetManager::accessAsset<RenderDataConfig>(setting_);
     rdc.bind();
-    glBindVertexBuffer(
-        0,
-        mesh.VBO_,
-        0,
-        sizeof(Vertex)
-    );
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
+    glVertexArrayVertexBuffer(rdc.getVAO(), 0, mesh.VBO_, 0, sizeof(Vertex));
+    glVertexArrayElementBuffer(rdc.getVAO(), mesh.EBO_);
     glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     /*

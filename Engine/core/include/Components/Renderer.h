@@ -13,29 +13,41 @@
 class RenderDataConfig {
     public:
     void init() {
-        glGenVertexArrays(1, &VAO_);
-        glBindVertexArray(VAO_);
+        glCreateVertexArrays(1, &VAO_);
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, position_));
-        glVertexAttribBinding(0, 0);
+        glVertexArrayAttribFormat(VAO_, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, position_));
+        glVertexArrayAttribBinding(VAO_, 0, 0);
 
-        glEnableVertexAttribArray(1);
-        glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, normal_));
-        glVertexAttribBinding(1, 0);
+        glVertexArrayAttribFormat(VAO_, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, normal_));
+        glVertexArrayAttribBinding(VAO_, 1, 0);
 
-        glEnableVertexAttribArray(2);
-        glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, texCoords_));
-        glVertexAttribBinding(2, 0);
+        glVertexArrayAttribFormat(VAO_, 2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, texCoords_));
+        glVertexArrayAttribBinding(VAO_, 2, 0);
 
-        glBindVertexArray(0);
+        glEnableVertexArrayAttrib(VAO_, 0);
+        glEnableVertexArrayAttrib(VAO_, 1);
+        glEnableVertexArrayAttrib(VAO_, 2);
+
+        location_index_ = 3;
     }
+
+    void addAttribute(int dim, size_t offset) {
+        if (location_index_ == 0) { init(); }
+        glVertexArrayAttribFormat(VAO_, location_index_, dim, GL_FLOAT, GL_FALSE, offset);
+        glVertexArrayAttribBinding(VAO_, location_index_, 1);
+        glEnableVertexArrayAttrib(VAO_, location_index_);
+        glVertexArrayBindingDivisor(VAO_, 1, 1);
+        location_index_++;
+    }
+    unsigned int getVAO() { return VAO_; }
+
     void bind() {
         glBindVertexArray(VAO_);
     }
     
     private:
     unsigned int VAO_;
+    int location_index_ = 0;
 };
 
 struct OutlineConfig {
