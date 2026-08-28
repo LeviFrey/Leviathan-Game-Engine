@@ -4,6 +4,7 @@
 #include "Shapes.h"
 #include "TextureLoader.h"
 #include "ShaderLoader.h"
+#include "ModelLoader.h"
 
 #include <iostream>
 #include <glad/glad.h>
@@ -98,7 +99,9 @@ ModelID AssetManager::loadModel(const std::filesystem::path& path) {
     if (it != model_cache_.end()) {
         return it->second;
     } else {
-        return processModelFromFile(path); 
+        ModelID id = storeAsset<Model>(ModelLoader::loadModel(path));
+        model_cache_.insert({path.string(), id});
+        return id;
     }
 }
 
@@ -153,9 +156,10 @@ ShaderID AssetManager::loadShader(
  * Model Loading Pipeline Code
  */
 
+/*
 ModelID AssetManager::processModelFromFile(const std::filesystem::path& path) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate /*| aiProcess_FlipUVs*/);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
@@ -266,3 +270,4 @@ TextureID AssetManager::loadMaterialTextures(aiMaterial* mat, aiTextureType type
     const std::filesystem::path newPath = context.directory_ / subPath;
     return loadTexture(newPath);
 }
+*/

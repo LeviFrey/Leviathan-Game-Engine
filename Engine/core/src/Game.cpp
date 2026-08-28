@@ -258,7 +258,7 @@ void Game::drawScreenBuffer() {
     glBindVertexBuffer(0, quad.VBO_, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad.EBO_);
     //glBindVertexArray(quad.VAO_);
-    glDrawElements(GL_TRIANGLES, quad.indices_.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, quad.num_indices_, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
@@ -274,7 +274,7 @@ void Game::drawSkybox() {
     glBindVertexBuffer(0, mesh.VBO_, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
     //glBindVertexArray(mesh.VAO_);
-    glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, mesh.num_indices_, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     glDepthFunc(GL_LESS);
 }

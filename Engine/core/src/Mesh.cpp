@@ -1,17 +1,12 @@
 #include "Mesh.h"
-#include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "AssetManager.h"
 
 
 Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices) {
-    vertices_ = vertices;
-    indices_ = indices;
-    setUpMesh();
-}
-
-void Mesh::setUpMesh() {
+    vector<Vertex> vertices_ = vertices;
+    vector<unsigned int> indices_ = indices;
+    num_indices_ = indices_.size();
     //glGenVertexArrays(1, &VAO_);
     glGenBuffers(1, &VBO_);
     glGenBuffers(1, &EBO_);

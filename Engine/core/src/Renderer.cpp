@@ -4,26 +4,23 @@
 #include "Game.h"
 #include "AssetManager.h"
 #include "RenderBindings.h"
-#include <iostream>
 
-Renderer::Renderer(ModelID model_id, ShaderID shader_id) : 
-    model_id_(model_id),
-    shader_id_(shader_id) {
+Renderer::Renderer(Model* model, Shader* shader) : 
+    model_(model),
+    shader_(shader) {
     setting_ = AssetManager::defaultRDC();
 }
 
 void Renderer::render() {
-    const Shader& shader = AssetManager::accessAsset<Shader>(shader_id_);
-    shader.use();
+    shader_->use();
     glm::mat4 transform = getGameObject()->getComponent<Transform>()->getWorldMatrix();
-    shader.setMat4("model", transform);
-    getGameObject()->getGame()->applyGlobalUniforms(shader);
-    const Model& model = AssetManager::accessAsset<Model>(model_id_);
+    shader_->setMat4("model", transform);
+    getGameObject()->getGame()->applyGlobalUniforms(*shader_);
 
-    for (int i = 0; i < model.parts_.size(); i++) {
-        const Mesh& mesh = AssetManager::accessAsset<Mesh>(model.parts_[i].mesh_);
-        const Material& material = AssetManager::accessAsset<Material>(model.parts_[i].material_);
-        useMaterial(material, shader);
+    for (int i = 0; i < model_->parts_.size(); i++) {
+        Material material = model_->parts_[i].material_;
+        Mesh mesh = model_->parts_[i].mesh_;
+        useMaterial(material);
         
         if (outline_.active_) {
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -34,11 +31,11 @@ void Renderer::render() {
         drawMesh(mesh);
 
         if (outline_.active_) {
-            drawOutline(shader, mesh, transform);
+            drawOutline(mesh, transform);
         }
 
         if (debug_.visualizeNormals_) {
-            drawNormals(shader, mesh, transform);
+            drawNormals(mesh, transform);
         }
     }
 }
@@ -53,14 +50,12 @@ void bindTexture(const Shader& shader, unsigned int bind_num, const std::string&
     glBindTexture(GL_TEXTURE_2D, texture.ID_);
 }
 
-void Renderer::useMaterial(const Material& material, const Shader& shader) {
-    shader.use();
-    const Texture& diffuse = AssetManager::accessAsset<Texture>(material.diffuse_);
-    const Texture& specular = AssetManager::accessAsset<Texture>(material.specular_);
-    glBindTextureUnit((int)TextureBinding::Diffuse, diffuse.ID_);
-    glBindTextureUnit((int)TextureBinding::Specular, specular.ID_);
-    shader.setFloat("material.shininess", material.shininess_);
-    shader.setFloat("material.tesselationRate", material.tesselationRate_);
+void Renderer::useMaterial(const Material& material) {
+    shader_->use();
+    glBindTextureUnit((int)TextureBinding::Diffuse, material.diffuse_.ID_);
+    glBindTextureUnit((int)TextureBinding::Specular, material.specular_.ID_);
+    shader_->setFloat("material.shininess", material.shininess_);
+    shader_->setFloat("material.tesselationRate", material.tesselationRate_);
 }
 
 void Renderer::drawMesh(const Mesh& mesh) {
@@ -68,7 +63,7 @@ void Renderer::drawMesh(const Mesh& mesh) {
     rdc.bind();
     glVertexArrayVertexBuffer(rdc.getVAO(), 0, mesh.VBO_, 0, sizeof(Vertex));
     glVertexArrayElementBuffer(rdc.getVAO(), mesh.EBO_);
-    glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, mesh.num_indices_, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     /*
     glBindVertexArray(VAO_);
@@ -77,7 +72,7 @@ void Renderer::drawMesh(const Mesh& mesh) {
     */
 }
 
-void Renderer::drawOutline(const Shader& shader, const Mesh& mesh, glm::mat4 transform) {
+void Renderer::drawOutline(const Mesh& mesh, glm::mat4 transform) {
     const Shader& outline_shader = AssetManager::accessAsset<Shader>(AssetManager::defaultShaders().outline_);
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -91,13 +86,13 @@ void Renderer::drawOutline(const Shader& shader, const Mesh& mesh, glm::mat4 tra
     drawMesh(mesh);
     
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    shader.use();
+    shader_->use();
 }
 
-void Renderer::drawNormals(const Shader& shader, const Mesh& mesh, glm::mat4 transform) {
+void Renderer::drawNormals(const Mesh& mesh, glm::mat4 transform) {
     const Shader& normShader = AssetManager::accessAsset<Shader>(AssetManager::defaultShaders().visualizeNormals_);
     normShader.use();
     normShader.setMat4("model", transform);
     drawMesh(mesh);
-    shader.use();
+    shader_->use();
 }

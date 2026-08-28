@@ -63,25 +63,28 @@ struct DebugConfig {
 
 class Renderer : public Component {
     public:
-        Renderer(ModelID model, ShaderID shader);
+
+        Renderer(Model* model, Shader* shader);
+
+        // Main utilization
         void render();
         void update() override {}
-        ModelID getModel() { return model_id_; }
-        ShaderID getShader() { return shader_id_; }
+
+        // Possibly temporary config options
         OutlineConfig& getOutlineConfig() { return outline_; }
         DebugConfig& getDebugConfig() { return debug_; }
+
     private:
-        std::vector<unsigned int> parts_;
         RenderDataConfigID setting_;
-        ModelID model_id_;
-        ShaderID shader_id_;
-        void useMaterial(const Material& material, const Shader& shader);
+        Model* model_;
+        Shader* shader_;
+        void useMaterial(const Material& material);
         void drawMesh(const Mesh& mesh);
-        void drawNormals(const Shader& shader, const Mesh& mesh, glm::mat4 transform);
+        void drawNormals(const Mesh& mesh, glm::mat4 transform);
 
         // Render Settings:
         OutlineConfig outline_{false, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.05f};
-        void drawOutline(const Shader& shader, const Mesh& mesh, glm::mat4 transform);
+        void drawOutline(const Mesh& mesh, glm::mat4 transform);
         
         DebugConfig debug_;
 };

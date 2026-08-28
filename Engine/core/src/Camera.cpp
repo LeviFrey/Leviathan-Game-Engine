@@ -1,10 +1,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "Components/Camera.h"
-#include "Input/KeyboardHandler.h"
-#include "Input/MouseHandler.h"
-#include "DeltaClock.h"
-#include "Game.h"
 #include "Components/Transform.h"
+#include "GameObject.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>

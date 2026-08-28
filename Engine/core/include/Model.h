@@ -1,13 +1,18 @@
 #pragma once
 #include <vector>
-#include "AssetTypes.h"
+#include "Mesh.h"
+#include "Material.h"
 
 
 struct RenderPart {
-    MeshID mesh_;
-    MaterialID material_;
+    Mesh mesh_;
+    Material material_;
 };
 
 struct Model {
     std::vector<RenderPart> parts_;
+    void addPart(RenderPart part) { parts_.push_back(part); }
+    void addPart(Mesh mesh, Material material) { parts_.push_back({mesh, material}); } 
 };
+
+

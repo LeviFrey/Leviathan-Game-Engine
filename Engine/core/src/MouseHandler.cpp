@@ -1,5 +1,5 @@
 #include "Input/MouseHandler.h"
-#include <iostream>
+
 void MouseHandler::handleMouseMovement(GLFWwindow* window, double xpos, double ypos) {
     lastXPos_ = xpos_;
     lastYPos_ = ypos_;

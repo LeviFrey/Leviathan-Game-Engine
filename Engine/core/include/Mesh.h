@@ -12,12 +12,11 @@ struct Vertex {
 class Mesh {
     public:
         Mesh(vector<Vertex> vertices, vector<unsigned int> indices);
-        Mesh() = default;
-        void setUpMesh();
 
         unsigned int VBO_;
         //unsigned int VAO_;
         unsigned int EBO_;
-        vector<Vertex> vertices_;
-        vector<unsigned int> indices_;
+        unsigned int num_indices_;
+        //vector<Vertex> vertices_;
+        //vector<unsigned int> indices_;
 };

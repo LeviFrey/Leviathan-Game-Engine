@@ -57,13 +57,14 @@ private:
 public:
     static void init();
 
+
     
     // GET asset object from ID
     template <typename T>
     static T& accessAsset(AssetID<T> id) {
         auto& asset_storage = getStorage<T>();
         if (id.value >= asset_storage.data_.size()) {
-            std::cout 
+            std::cout
             << "Engine Error: Asset at id: " 
             << id.value
             << ", of type: "
@@ -80,7 +81,7 @@ public:
     static TextureID loadTexture(const std::filesystem::path& path);
     static TextureID loadCubemap(std::array<std::filesystem::path, 6> paths);
     static ShaderID loadShader(
-            const std::filesystem::path& vertex_path, 
+            const std::filesystem::path& vertex_path,
             const std::filesystem::path& fragment_path,
             const std::filesystem::path& geometry_path = {});
 
@@ -128,26 +129,27 @@ public:
     static const RenderDataConfigID defaultRDC() { return default_rdc_; }
 
 private:
-
+    /*
     struct LoadContext {
         std::filesystem::path directory_;
         std::unordered_map<int, MaterialID> material_cache_;
         Model model_;
     };
+    */
 
     struct ShaderKey {
         std::filesystem::path vertex;
         std::filesystem::path fragment;
         std::filesystem::path geometry;
         auto operator<(const ShaderKey& other) const  {
-            return 
+            return
                 std::tie(
-                    vertex, 
-                    fragment, 
+                    vertex,
+                    fragment,
                     geometry)
                  < std::tie(
-                    other.vertex, 
-                    other.fragment, 
+                    other.vertex,
+                    other.fragment,
                     other.geometry);
         }
     };
@@ -174,21 +176,24 @@ private:
 
     template <typename T>
     static AssetStorage<T>& getStorage();
-     
+
     // Data Caches
     static std::map<std::string, TextureID> texture_cache_;
     static std::map<CubemapKey, TextureID> cubemap_cache_;
     static std::map<std::string, ModelID> model_cache_;
     static std::map<ShaderKey, ShaderID> shader_cache_;
 
+    /*
     // Model loading
     static ModelID processModelFromFile(const std::filesystem::path& path);
     static void processNode(aiNode* node, const aiScene* scene, LoadContext& context);
     static void processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& context);
     static TextureID loadMaterialTextures(
-            aiMaterial* mat, 
-            aiTextureType type, 
+            aiMaterial* mat,
+            aiTextureType type,
             LoadContext& context);
+
+            */
 
     static DefaultShaders defaultShaders_;
     static DefaultGeometry defaultGeometry_;

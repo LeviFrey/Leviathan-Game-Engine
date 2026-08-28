@@ -127,7 +127,7 @@ int main(int argc, char* args[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.setMat4("view", views[i]);
-        glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, mesh.num_indices_, GL_UNSIGNED_INT, 0);
         
         std::vector<unsigned char> pixels(size * size * 3);
         glReadBuffer(GL_COLOR_ATTACHMENT0);
