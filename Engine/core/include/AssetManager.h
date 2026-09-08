@@ -11,6 +11,7 @@
 // from Engine
 #include "Mesh.h"
 #include "Texture.h"
+#include "Cubemap.h"
 #include "Shader.h"
 #include "Model.h"
 #include "AssetTypes.h"
@@ -22,181 +23,118 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+template <typename T>
+        struct AssetKey;
+
+        template<>
+        struct AssetKey<Shader> {
+            std::filesystem::path vertex;
+            std::filesystem::path fragment;
+            std::filesystem::path geometry;
+            auto operator<(const AssetKey<Shader>& other) const  {
+                return
+                    std::tie(
+                        vertex,
+                        fragment,
+                        geometry)
+                     < std::tie(
+                        other.vertex,
+                        other.fragment,
+                        other.geometry);
+            }
+        };
+        
+        template<>
+        struct AssetKey<Cubemap> {
+            std::array<std::filesystem::path, 6> paths;
+            bool operator<(const AssetKey<Cubemap>& other) const {
+                return paths < other.paths;
+            }
+        };
+
+        template<>
+        struct AssetKey<Texture> {
+            std::filesystem::path path;
+            bool operator<(const AssetKey<Texture>& other) const {
+                return path < other.path;
+            }
+        };
+
+        template<>
+        struct AssetKey<Model> {
+            std::filesystem::path path;
+            bool operator<(const AssetKey<Model>& other) const {
+                return path < other.path;
+            }
+        };
+
 
 /*
  * A global storage for all game assets
  * If an Asset is needed between objects, AssetManager will cache them and can be loaded separately
  */
 class AssetManager {
+    private: 
 
-private:
-
-    struct DefaultShaders {
-        ShaderID fallback_; // fallback
-        ShaderID outline_;
-        ShaderID skybox_;
-        ShaderID noPostEffect_;
-        ShaderID visualizeNormals_;
-    };
+        // Storage definitions for custom generated assets
+        template <typename T>
+        struct AssetStorage {
+            std::vector<T> data_;
+            std::unordered_map<std::string, int> registry_;
+        };
     
-    struct DefaultGeometry {
-        MeshID cube_; // fallback
-        MeshID quad_;
-    };
+        inline static AssetStorage<Mesh> mesh_storage_;
+        inline static AssetStorage<Texture> texture_storage_;
+        inline static AssetStorage<Material> material_storage_;
+        inline static AssetStorage<Shader> shader_storage_;
+        inline static AssetStorage<Model> model_storage_;
+        inline static AssetStorage<RenderDataConfig> rdc_storage_;
 
-    struct DefaultTextures {
-        TextureID fallback_; // fallback
-    };
+        template <typename T>
+        static AssetStorage<T>& getStorage();
 
-    struct DefaultMaterials {
-        MaterialID textureless_; //fallback
-    };
+        // Storage definitions for assets loaded through loader programs
+        
+        // Data Caches
+        inline static std::map<AssetKey<Texture>, Texture> texture_cache_;
+        inline static std::map<AssetKey<Cubemap>, Cubemap> cubemap_cache_;
+        inline static std::map<AssetKey<Model>,   Model> model_cache_;
+        inline static std::map<AssetKey<Shader>,  Shader> shader_cache_;
 
-    static RenderDataConfigID default_rdc_;
+        template <typename T>
+        static std::map<AssetKey<T>, T> getCache();
 
-public:
-    static void init();
+        template <typename T>
+        static T loadOnCacheMiss(const AssetKey<T>& key);
 
-
-    
-    // GET asset object from ID
-    template <typename T>
-    static T& accessAsset(AssetID<T> id) {
-        auto& asset_storage = getStorage<T>();
-        if (id.value >= asset_storage.data_.size()) {
-            std::cout
-            << "Engine Error: Asset at id: " 
-            << id.value
-            << ", of type: "
-            << typeid(T).name()
-            << ", not found."
-            << std::endl;
-            return asset_storage.data_.at(0);
+    public:
+        
+        // STORE custom asset by NAMETAG
+        template <typename T>
+        static void storeAsset(T asset, const std::string& nametag) {
+            auto& asset_storage = getStorage<T>();
+            asset_storage.data_.push_back(asset);
+            asset_storage.registry_.insert({nametag, asset_storage.size()-1});
         }
-        return asset_storage.data_.at(id.value);
-    }
-
-    // LOAD and PROCESS assets from Filesystem and emplace into AssetManager
-    static ModelID loadModel(const std::filesystem::path& path);
-    static TextureID loadTexture(const std::filesystem::path& path);
-    static TextureID loadCubemap(std::array<std::filesystem::path, 6> paths);
-    static ShaderID loadShader(
-            const std::filesystem::path& vertex_path,
-            const std::filesystem::path& fragment_path,
-            const std::filesystem::path& geometry_path = {});
-
-    
-    // STORE asset for single-time use
-    template <typename T>
-    static AssetID<T> storeAsset(T asset) {
-        auto& asset_storage = getStorage<T>();
-        asset_storage.data_.push_back(asset);
-        uint32_t id = asset_storage.data_.size()-1;
-        return {id};
-    }
-
-    // REGISTER assets with user-specific strings
-    template <typename T>
-    static AssetID<T> registerAsset(std::string asset_name, T asset) {
-        auto& asset_storage = getStorage<T>();
-        AssetID<T> id = storeAsset<T>(asset);
-        asset_storage.registry_.insert({asset_name, id});
-        return id;
-    }
-
-    // ACQUIRE asset id from user-specific name
-    template <typename T>
-    static AssetID<T> findAssetID(std::string name) {
-        auto& asset_storage = getStorage<T>();
-        auto iter = asset_storage.registry_.find(name);
-        if (iter == asset_storage.registry_.end()) {
-            std::cout
-                << "Engine Error:"
-                << "registered asset with name: "
-                << name
-                << ", not found."
-                << std::endl;
-            return {0};
+        
+        // GET custom asset by NAMETAG
+        template <typename T>
+        static T& getAsset(const std::string& nametag) {
+            auto& asset_storage = getStorage<T>();
+            return asset_storage.data_.at(asset_storage.registry_.at(nametag));
         }
-        return asset_storage.registry_.at(name);
-    };
-    
-    // Get Preloaded assets
-    static const DefaultShaders& defaultShaders() { return defaultShaders_; }
-    static const DefaultGeometry& defaultMeshes() { return defaultGeometry_; }
-    static const DefaultTextures& defaultTextures() { return defaultTextures_; }
-    static const DefaultMaterials& defaultMaterials() { return defaultMaterials_; }
-    static const RenderDataConfigID defaultRDC() { return default_rdc_; }
-
-private:
-    /*
-    struct LoadContext {
-        std::filesystem::path directory_;
-        std::unordered_map<int, MaterialID> material_cache_;
-        Model model_;
-    };
-    */
-
-    struct ShaderKey {
-        std::filesystem::path vertex;
-        std::filesystem::path fragment;
-        std::filesystem::path geometry;
-        auto operator<(const ShaderKey& other) const  {
-            return
-                std::tie(
-                    vertex,
-                    fragment,
-                    geometry)
-                 < std::tie(
-                    other.vertex,
-                    other.fragment,
-                    other.geometry);
+        
+        // ACCESS data cache for program-loaded assets
+        template <typename T>
+        static T& accessAssetCache(const AssetKey<T>& key) {
+            auto& asset_cache = getCache<T>();
+            auto it = asset_cache.find(key);
+            if (it != asset_cache.end()) {
+                return it->second;
+            } else {
+                auto& asset_cache = getCache<T>();
+                auto [it, inserted] = asset_cache.emplace(key, loadOnCacheMiss<T>(key));
+                return it->second;
+            }
         }
-    };
-
-    struct CubemapKey {
-        std::array<std::filesystem::path, 6> paths;
-        bool operator<(const CubemapKey& other) const {
-            return paths < other.paths;
-        }
-    };
- 
-    template <typename T>
-    struct AssetStorage {
-        std::vector<T> data_;
-        std::unordered_map<std::string, AssetID<T>> registry_;
-    };
-    
-    static AssetStorage<Mesh> mesh_storage_;
-    static AssetStorage<Texture> texture_storage_;
-    static AssetStorage<Material> material_storage_;
-    static AssetStorage<Shader> shader_storage_;
-    static AssetStorage<Model> model_storage_;
-    static AssetStorage<RenderDataConfig> rdc_storage_;
-
-    template <typename T>
-    static AssetStorage<T>& getStorage();
-
-    // Data Caches
-    static std::map<std::string, TextureID> texture_cache_;
-    static std::map<CubemapKey, TextureID> cubemap_cache_;
-    static std::map<std::string, ModelID> model_cache_;
-    static std::map<ShaderKey, ShaderID> shader_cache_;
-
-    /*
-    // Model loading
-    static ModelID processModelFromFile(const std::filesystem::path& path);
-    static void processNode(aiNode* node, const aiScene* scene, LoadContext& context);
-    static void processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& context);
-    static TextureID loadMaterialTextures(
-            aiMaterial* mat,
-            aiTextureType type,
-            LoadContext& context);
-
-            */
-
-    static DefaultShaders defaultShaders_;
-    static DefaultGeometry defaultGeometry_;
-    static DefaultTextures defaultTextures_;
-    static DefaultMaterials defaultMaterials_;
 };

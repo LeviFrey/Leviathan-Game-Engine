@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-Model ModelLoader::loadModel(const std::filesystem::path& path) {
+Model ModelLoader::loadModelFromFile(const std::filesystem::path& path) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate /*| aiProcess_FlipUVs*/);
 

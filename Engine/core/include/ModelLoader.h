@@ -22,7 +22,7 @@ class ModelLoader {
             Model model_;
         };
     public:
-        static Model loadModel(const std::filesystem::path& path);
+        static Model loadModelFromFile(const std::filesystem::path& path);
         static void processNode(aiNode* node, const aiScene* scene, LoadContext& context);
         static void processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& context);
         static Texture loadMaterialTextures(

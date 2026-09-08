@@ -116,7 +116,7 @@ Texture TextureLoader::loadTextureFromData(
     return {ID};
 }
 
-Texture TextureLoader::loadCubemapFromFile(std::array<std::filesystem::path, 6> paths) {
+Cubemap TextureLoader::loadCubemapFromFile(std::array<std::filesystem::path, 6> paths) {
     unsigned int ID; 
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
@@ -143,7 +143,7 @@ Texture TextureLoader::loadCubemapFromFile(std::array<std::filesystem::path, 6> 
     return {ID};
 }
 
-Texture TextureLoader::createEmptyCubemap(
+Cubemap TextureLoader::createEmptyCubemap(
         unsigned int size, 
         EmptyCubemapContext context) 
 {
