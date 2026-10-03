@@ -27,19 +27,19 @@ class Game {
             hasSkybox_ = true;
             skyboxTexture_ = texture;
         }
+        void setCamera(Camera* camera);
+        Camera* getCamera() { return camera_; }
         
-        static void frameBufferSizeCallback(GLFWwindow* window, int width, int height); 
         static Game* GamePtr(GLFWwindow* window);
+        static void frameBufferSizeCallback(GLFWwindow* window, int width, int height); 
         static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
         static void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
         static void scrollCallback(GLFWwindow* window, double xpos, double ypos);
+        void setDebugFunction(std::function<void(Game&)> debugFunction);
 
         MouseHandler* getMouseHandler();
         KeyboardHandler* getKeyboardHandler();
-        Camera* getCamera() { return camera_; }
 
-        void setCamera(Camera* camera);
-        void setDebugFunction(std::function<void(Game&)> debugFunction);
         
         void Loop();
         void addGameObject(GameObject* obj);
@@ -69,8 +69,8 @@ class Game {
         
         // -- Frame Buffer config -- 
         ShaderID postEffect_;
-        unsigned int frame_buffer_;
-        unsigned int rbo_;
+        GLuint frame_buffer_;
+        GLuint rbo_;
         Texture buffer_texture_;
 
         // -- skybox config --

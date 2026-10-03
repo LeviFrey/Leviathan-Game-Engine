@@ -5,7 +5,7 @@
 #include "Components/LightSource.h"
 #include "DeltaClock.h"
 #include "PathUtils.h"
-#include "AssetManager.h"
+#include "EngineAssets.h"
 #include "TextureLoader.h"
 #include "RenderBindings.h"
 #include "CameraData.h"
@@ -113,7 +113,7 @@ Game::Game(int window_width, int window_height) {
     
     // Gather Assets
     PathUtils::init();
-    AssetManager::init();
+    EngineAssets::init();
 
     // generate light UBO
     glGenBuffers(1, &lightUBO_);
@@ -154,7 +154,7 @@ Game::Game(int window_width, int window_height) {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    postEffect_ = AssetManager::defaultShaders().noPostEffect_;
+    postEffect_ = EngineAssets::defaultShaders().noPostEffect_;
 }
 
 

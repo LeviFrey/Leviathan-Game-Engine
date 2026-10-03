@@ -3,23 +3,24 @@
 #include "GameObject.h"
 #include "Game.h"
 #include "AssetManager.h"
+#include "EngineAssets.h"
 #include "RenderBindings.h"
 
-Renderer::Renderer(Model* model, Shader* shader) : 
+Renderer::Renderer(const Model& model, const Shader& shader) : 
     model_(model),
-    shader_(shader) {
-    setting_ = AssetManager::defaultRDC();
-}
+    shader_(shader), 
+    render_config_(AssetManager::getAssetByID<RenderDataConfig>(EngineAssets::getDefaultRDC())) {}
 
 void Renderer::render() {
-    shader_->use();
+    shader_.use();
     glm::mat4 transform = getGameObject()->getComponent<Transform>()->getWorldMatrix();
-    shader_->setMat4("model", transform);
-    getGameObject()->getGame()->applyGlobalUniforms(*shader_);
-
-    for (int i = 0; i < model_->parts_.size(); i++) {
-        Material material = model_->parts_[i].material_;
-        Mesh mesh = model_->parts_[i].mesh_;
+    shader_.setMat4("model", transform);
+    getGameObject()->getGame()->applyGlobalUniforms(shader_);
+    
+    const std::vector<RenderPart>& model_parts = model_.getParts();
+    for (int i = 0; i < model_parts.size(); i++) {
+        const Material& material = model_parts[i].material_;
+        const Mesh& mesh = model_parts[i].mesh_;
         useMaterial(material);
         
         if (outline_.active_) {
@@ -40,29 +41,18 @@ void Renderer::render() {
     }
 }
 
-/*
- * Ran each time for every mesh, need to find a way to maybe map by material
- */
-void bindTexture(const Shader& shader, unsigned int bind_num, const std::string& name, TextureID id) {
-    glActiveTexture(GL_TEXTURE0 + bind_num);
-    shader.setInt(name, bind_num);
-    const Texture& texture = AssetManager::accessAsset<Texture>(id);
-    glBindTexture(GL_TEXTURE_2D, texture.ID_);
-}
-
 void Renderer::useMaterial(const Material& material) {
-    shader_->use();
+    shader_.use();
     glBindTextureUnit((int)TextureBinding::Diffuse, material.diffuse_.ID_);
     glBindTextureUnit((int)TextureBinding::Specular, material.specular_.ID_);
-    shader_->setFloat("material.shininess", material.shininess_);
-    shader_->setFloat("material.tesselationRate", material.tesselationRate_);
+    shader_.setFloat("material.shininess", material.shininess_);
+    shader_.setFloat("material.tesselationRate", material.tesselationRate_);
 }
 
 void Renderer::drawMesh(const Mesh& mesh) {
-    RenderDataConfig& rdc = AssetManager::accessAsset<RenderDataConfig>(setting_);
-    rdc.bind();
-    glVertexArrayVertexBuffer(rdc.getVAO(), 0, mesh.VBO_, 0, sizeof(Vertex));
-    glVertexArrayElementBuffer(rdc.getVAO(), mesh.EBO_);
+    render_config_.bind();
+    glVertexArrayVertexBuffer(render_config_.getVAO(), 0, mesh.VBO_, 0, sizeof(Vertex));
+    glVertexArrayElementBuffer(render_config_.getVAO(), mesh.EBO_);
     glDrawElements(GL_TRIANGLES, mesh.num_indices_, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     /*
@@ -73,7 +63,8 @@ void Renderer::drawMesh(const Mesh& mesh) {
 }
 
 void Renderer::drawOutline(const Mesh& mesh, glm::mat4 transform) {
-    const Shader& outline_shader = AssetManager::accessAsset<Shader>(AssetManager::defaultShaders().outline_);
+    const ShaderID& outline_shader_id = EngineAssets::getOutlineShader();
+    const Shader& outline_shader = AssetManager::getAssetByID<Shader>(outline_shader_id);
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     glStencilMask(0x00);
@@ -86,13 +77,14 @@ void Renderer::drawOutline(const Mesh& mesh, glm::mat4 transform) {
     drawMesh(mesh);
     
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    shader_->use();
+    shader_.use();
 }
 
 void Renderer::drawNormals(const Mesh& mesh, glm::mat4 transform) {
-    const Shader& normShader = AssetManager::accessAsset<Shader>(AssetManager::defaultShaders().visualizeNormals_);
-    normShader.use();
-    normShader.setMat4("model", transform);
+    const ShaderID& norm_shader_id = EngineAssets::getVisualizeNormalShader();
+    const Shader& norm_shader = AssetManager::getAssetByID<Shader>(norm_shader_id);
+    norm_shader.use();
+    norm_shader.setMat4("model", transform);
     drawMesh(mesh);
-    shader_->use();
+    shader_.use();
 }
