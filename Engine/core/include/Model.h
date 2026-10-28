@@ -72,6 +72,7 @@ class Model {
         
         // Model Loading helper functions
         std::unique_ptr<Material> loadMaterial(aiMaterial* mat);
+        Texture* loadTexture(aiMaterial* mat, aiTextureType type);
         std::filesystem::path loadTexturePath(aiMaterial* mat, aiTextureType type);
         void processNode(aiNode* node, const aiScene* scene);
         void processMesh(aiMesh* mesh, const aiScene* scene);

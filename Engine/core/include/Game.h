@@ -20,6 +20,7 @@
 class Game {
     public:
         Game(int window_width, int window_height);
+
         void setSkybox(TextureID texture) {
             hasSkybox_ = true;
             skyboxTexture_ = texture;
@@ -43,11 +44,11 @@ class Game {
         void addGameObject(GameObject* obj);
         void addLightSource(LightSource* light);
         InputHandler& getInputHandler() { return input_; }
-        //void applyGlobalUniforms(const Shader& shader);
     private:
  
         // -- Game Context --
         AssetManager asset_manager_;
+        Window window_;
         InputHandler input_;
 
         // -- Game Loop Processing abstractions --
@@ -57,9 +58,6 @@ class Game {
         int window_width_;
         int window_height_;
         std::function<void(Game&)> debugFunction_;
-        
-        // -- GLFW library stuff --
-        GLFWwindow* window_;
         
         //  -- Game object handling --
         std::vector<GameObject*> game_objects_;

@@ -1,8 +1,12 @@
 #include "RenderPipeline.h"
 
-RenderPipeline::RenderPipeline(unsigned int width, unsigned int height) :
+RenderPipeline::RenderPipeline(
+        unsigned int width, 
+        unsigned int height,
+        Window* window) :
     frame_buffer_{width, height},
-    screen_(std::make_unique<ScreenObject>(width, height, frame_buffer_.getTexture()))
+    screen_(std::make_unique<ScreenObject>(width, height, frame_buffer_.getTexture())),
+    window_(window)
 {}
     
 void RenderPipeline::renderScreen(const std::vector<GameObject*>& objects) {
@@ -30,7 +34,7 @@ void RenderPipeline::renderScreen(const std::vector<GameObject*>& objects) {
         screen_->getComponents()->get<Renderer>()->render();
     }
 
-    glfwSwapBuffers(window_);
+    glfwSwapBuffers(window_->getGLFWPtr());
     
 }
 

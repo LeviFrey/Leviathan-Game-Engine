@@ -4,20 +4,20 @@
 #include "Objects/ScreenObject.h"
 #include "Objects/Skybox.h"
 #include "FrameBuffer.h"
+#include "Window.h"
 #include <GLFW/glfw3.h>
 
 
 class RenderPipeline {
     public:
 
-        RenderPipeline(unsigned int width, unsigned int height);
+        RenderPipeline(unsigned int width, unsigned int height, Window* window);
 
         void renderScreen(const std::vector<GameObject*>& objects);
         
         void setScreenDimensions(unsigned int width, unsigned int height);
         Skybox* getSkybox() { return skybox_obj_.get(); }
 
-        void setWindow(GLFWwindow* window) { window_ = window; }
         void resetRenderConfig();
         
     private:
@@ -34,5 +34,5 @@ class RenderPipeline {
         std::unique_ptr<ScreenObject> screen_; // for post processing
         std::unique_ptr<Skybox> skybox_obj_ = nullptr; 
 
-        GLFWwindow* window_;
+        Window* window_;
 };

@@ -31,6 +31,5 @@ unsigned int ElementBuffer::loadResource() {
     );
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    std::cout << "Loaded EBO: " << EBO << std::endl;
     return EBO;
 }
