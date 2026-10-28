@@ -5,7 +5,7 @@
 
 class PlayerCamera : public GameObject {
     public:
-        explicit PlayerCamera(Game* game) : GameObject(game) {
+        explicit PlayerCamera() {
             addComponent<Transform>();
             addComponent<Camera>();
         }

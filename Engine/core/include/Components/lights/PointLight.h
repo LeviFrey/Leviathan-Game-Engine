@@ -38,7 +38,7 @@ class PointLight : public LightSource {
             data.specular_ = glm::vec4(getSpecular(), 1.0f);
             data.attenuation_ = glm::vec4(constant_, linear_, quadratic_, 1.0f); 
             
-            Transform* t = getGameObject()->getComponent<Transform>();
+            Transform* t = getSiblingComponent<Transform>();
             if (t) {
                 data.position_type_ = glm::vec4(t->getWorldPosition(), 1.0f);
             }

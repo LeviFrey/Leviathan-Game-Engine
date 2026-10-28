@@ -1,54 +1,12 @@
 #pragma once
 
-#include "Component.h"
-#include "AssetTypes.h"
+#include "Components/Component.h"
+#include "Components/Transform.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Shader.h"
-
-/*
- * Strictly Manipulates and Stores instructions (VAO) on how to read rendering data
- * TODO: allow for dynamic addition of data, such as positions for instance rendering
- */
-class RenderDataConfig {
-    public:
-    void init() {
-        glCreateVertexArrays(1, &VAO_);
-
-        glVertexArrayAttribFormat(VAO_, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, position_));
-        glVertexArrayAttribBinding(VAO_, 0, 0);
-
-        glVertexArrayAttribFormat(VAO_, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, normal_));
-        glVertexArrayAttribBinding(VAO_, 1, 0);
-
-        glVertexArrayAttribFormat(VAO_, 2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, texCoords_));
-        glVertexArrayAttribBinding(VAO_, 2, 0);
-
-        glEnableVertexArrayAttrib(VAO_, 0);
-        glEnableVertexArrayAttrib(VAO_, 1);
-        glEnableVertexArrayAttrib(VAO_, 2);
-
-        location_index_ = 3;
-    }
-
-    void addAttribute(int dim, size_t offset) {
-        if (location_index_ == 0) { init(); }
-        glVertexArrayAttribFormat(VAO_, location_index_, dim, GL_FLOAT, GL_FALSE, offset);
-        glVertexArrayAttribBinding(VAO_, location_index_, 1);
-        glEnableVertexArrayAttrib(VAO_, location_index_);
-        glVertexArrayBindingDivisor(VAO_, 1, 1);
-        location_index_++;
-    }
-    unsigned int getVAO() { return VAO_; }
-
-    void bind() {
-        glBindVertexArray(VAO_);
-    }
-    
-    private:
-    unsigned int VAO_;
-    int location_index_ = 0;
-};
+#include "EngineAssets.h"
+#include "Model.h"
 
 struct OutlineConfig {
     bool active_ = false;
@@ -60,28 +18,46 @@ struct DebugConfig {
     bool visualizeNormals_ = false;
 };
 
-
 class Renderer : public Component {
     public:
-        Renderer(ModelID model, ShaderID shader);
-        void render();
+
+        Renderer(
+            Model* model = nullptr, 
+            Shader* shader = &EngineAssets::PHONG_SHADER, 
+            VertexArrayObject* vao = &EngineAssets::DEFAULT_VAO
+        );
+
+        // Component inherited
         void update() override {}
-        ModelID getModel() { return model_id_; }
-        ShaderID getShader() { return shader_id_; }
+        
+        // Renderer Utilization
+        void render();
+        void setShader(Shader* shader) { main_shader_ = shader; }
+
+        // Possibly temporary config options
         OutlineConfig& getOutlineConfig() { return outline_; }
         DebugConfig& getDebugConfig() { return debug_; }
+
     private:
-        std::vector<unsigned int> parts_;
-        RenderDataConfigID setting_;
-        ModelID model_id_;
-        ShaderID shader_id_;
-        void useMaterial(const Material& material, const Shader& shader);
-        void drawMesh(const Mesh& mesh);
-        void drawNormals(const Shader& shader, const Mesh& mesh, glm::mat4 transform);
+        
+        // DATA
+        VertexArrayObject* vao_;
+        Model* model_;
+        Shader* main_shader_;
+
+        Shader* outline_shader_ = nullptr;
+        Shader* norm_shader_ = nullptr;
+        Cubemap* skybox_ = nullptr;
+
+
+        // HELPER FUNCTIONS
+        void useMaterial(Material* material);
+        void drawMesh(Mesh* mesh);
+        void drawNormals(Mesh* mesh, glm::mat4 transform);
 
         // Render Settings:
         OutlineConfig outline_{false, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.05f};
-        void drawOutline(const Shader& shader, const Mesh& mesh, glm::mat4 transform);
+        void drawOutline(Mesh* mesh, glm::mat4 transform);
         
         DebugConfig debug_;
 };

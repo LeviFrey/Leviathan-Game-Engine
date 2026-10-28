@@ -1,20 +1,18 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "Components/Camera.h"
-#include "Input/KeyboardHandler.h"
-#include "Input/MouseHandler.h"
-#include "DeltaClock.h"
-#include "Game.h"
 #include "Components/Transform.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 glm::vec3 Camera::getFront() {
-    return getGameObject()->getComponent<Transform>()->getWorldRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
+    Transform* t = getSiblingComponents()->get<Transform>();
+    return t->getWorldRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
 glm::vec3 Camera::getPosition() {
-    return getGameObject()->getComponent<Transform>()->getWorldPosition();
+    Transform* t = getSiblingComponents()->get<Transform>();
+    return t->getWorldPosition();
 }
 
 glm::mat4 Camera::getView() {
@@ -26,5 +24,8 @@ glm::mat4 Camera::getProjection() {
 }
 
 CameraData Camera::getData() {
-    return {getView(), getProjection(), glm::vec4(getPosition(), 1.0f)};
+    glm::mat4 view = getView();
+    glm::mat4 proj = getProjection();
+    glm::vec3 pos = getPosition();
+    return {view, proj, glm::vec4(pos, 1.0f)};
 }

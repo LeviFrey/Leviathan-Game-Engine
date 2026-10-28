@@ -46,19 +46,20 @@ int main(int argc, char* args[]) {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "FAILED TO LOAD GLAD" << std::endl;
     }
-    Texture equirectTexture = TextureLoader::loadTextureFromFile(
-        std::filesystem::path(path),
+    
+    Texture equirectTexture(
+        Image(path),
         {
-        .wrapT = GL_CLAMP_TO_EDGE
+            .wrapT = GL_CLAMP_TO_EDGE
         }
     );
-
-    Texture cubemap = TextureLoader::createEmptyCubemap(
-        size,
-        {
-        .format = GL_UNSIGNED_BYTE
-        }
-    );
+    
+    Image cm_face(size, size, 3);
+    Cubemap cubemap({
+        &cm_face, &cm_face,
+        &cm_face, &cm_face,
+        &cm_face, &cm_face,
+    });
     
     // Create Frame Buffer
     glGenFramebuffers(1, &captureFBO);
@@ -70,10 +71,9 @@ int main(int argc, char* args[]) {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
     
     // Load Shader
-    PathUtils::init();
     std::filesystem::path vertex = PathUtils::shaderDir / "equirectToCube/equirectToCube.vert";
     std::filesystem::path fragment = PathUtils::shaderDir / "equirectToCube/equirectToCube.frag";
-    Shader shader = ShaderLoader::loadShaderFromFile(vertex, fragment);
+    Shader shader(vertex, fragment);
     
     Mesh mesh = Shapes::createCube(1.0f);
 
@@ -106,28 +106,26 @@ int main(int argc, char* args[]) {
     glViewport(0,0,size,size);
     shader.use();
     shader.setMat4("projection", projection);
-    RenderDataConfig config;
-    config.init();
-    config.bind();
-    glBindVertexBuffer(0, mesh.VBO_, 0, sizeof(Vertex));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
-    //glBindVertexArray(mesh.VAO_);
+    VertexArrayObject config;
+    config.bindVertexBuffer(0, mesh.getVertexBuffer());
+    config.bindElementBuffer(mesh.getElementBuffer());
+
     glActiveTexture(GL_TEXTURE0);
     shader.setInt("equirectTexture", 0);
-    glBindTexture(GL_TEXTURE_2D, equirectTexture.ID_);
+    glBindTexture(GL_TEXTURE_2D, equirectTexture.getResource());
 
     for (int i = 0; i < 6; i++) {
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0,
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-            cubemap.ID_,
+            cubemap.getResource(),
             0
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.setMat4("view", views[i]);
-        glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, mesh.getElementBuffer().getNumIndices(), GL_UNSIGNED_INT, 0);
         
         std::vector<unsigned char> pixels(size * size * 3);
         glReadBuffer(GL_COLOR_ATTACHMENT0);

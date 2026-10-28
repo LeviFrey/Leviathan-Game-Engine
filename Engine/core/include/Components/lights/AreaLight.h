@@ -1,8 +1,6 @@
-#ifndef AREALIGHT_H
-#define AREALIGHT_H
+#pragma once
 
 #include <glm/glm.hpp>
-#include <iostream>
 #include "Components/LightSource.h"
 #include "Components/Transform.h"
 
@@ -18,15 +16,13 @@ class AreaLight : public LightSource {
             data.ambient_ = glm::vec4(getAmbient(), 1.0f);
             data.diffuse_ = glm::vec4(getDiffuse(), 1.0f);
             data.specular_ = glm::vec4(getSpecular(), 1.0f);
-
-            Transform* t = getGameObject()->getComponent<Transform>();
-            if (t) {
-                data.position_type_ = glm::vec4(t->getWorldPosition(), 1.0f);
-            }
+                
+            Transform* t = getSiblingComponent<Transform>();
+            data.position_type_ = glm::vec4(t->getWorldPosition(), 1.0f);
             data.position_type_[3] = LightType::AREA;
 
             return data;
         }
-};
 
-#endif
+    private:
+};

@@ -1,4 +1,5 @@
-#include "TextureLoader.h"
+/*
+#include "TextureLoade.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
@@ -116,7 +117,7 @@ Texture TextureLoader::loadTextureFromData(
     return {ID};
 }
 
-Texture TextureLoader::loadCubemapFromFile(std::array<std::filesystem::path, 6> paths) {
+Cubemap TextureLoader::loadCubemapFromFile(std::array<std::filesystem::path, 6> paths) {
     unsigned int ID; 
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
@@ -143,7 +144,7 @@ Texture TextureLoader::loadCubemapFromFile(std::array<std::filesystem::path, 6> 
     return {ID};
 }
 
-Texture TextureLoader::createEmptyCubemap(
+Cubemap TextureLoader::createEmptyCubemap(
         unsigned int size, 
         EmptyCubemapContext context) 
 {
@@ -176,3 +177,39 @@ Texture TextureLoader::createEmptyCubemap(
     }
     return {ID};
 };
+
+Cubemap TextureLoader::loadCubemapFromData(
+        std::array<const unsigned char*, 6> faces,
+        unsigned int size) {
+    
+    unsigned int ID;
+    glGenTextures(1, &ID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    for (int i = 0; i < 6; i++) {
+        glTexImage2D(
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            0,
+            GL_RGBA8,
+            size, size,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            faces[i]
+        );
+    }
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cerr << "Cubemap failed to create from data" << std::endl;
+    }
+    return {ID};
+}
+*/

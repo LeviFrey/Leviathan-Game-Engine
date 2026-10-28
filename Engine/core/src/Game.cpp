@@ -1,14 +1,13 @@
 // From Engine
 #include "Game.h"
-#include "Components/Renderer.h"
 #include "GameObject.h"
 #include "Components/LightSource.h"
 #include "DeltaClock.h"
-#include "PathUtils.h"
-#include "AssetManager.h"
-#include "TextureLoader.h"
 #include "RenderBindings.h"
 #include "CameraData.h"
+#include "Components/Camera.h"
+#include "Debug.h"
+#include "Components/FreeCamera.h"
 
 // From Standard Library
 #include <iostream>
@@ -16,10 +15,6 @@
 // From External
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-
-void printVectr(glm::vec3 vector) {
-    std::cout << vector.x << " " << vector.y << " " << vector.z << std::endl;
-}
 
 void Game::frameBufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -31,23 +26,15 @@ Game* Game::GamePtr(GLFWwindow* window) {
 }
 
 void Game::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    GamePtr(window)->getKeyboardHandler()->handleKeyPress(window, key, scancode, action, mods);
+    GamePtr(window)->input_.keyboard_handler.handleKeyPress(window, key, scancode, action, mods);
 }
 
 void Game::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
-    GamePtr(window)->getMouseHandler()->handleMouseMovement(window, xpos, ypos);
+    GamePtr(window)->input_.mouse_handler.handleMouseMovement(window, xpos, ypos);
 }
 
 void Game::scrollCallback(GLFWwindow* window, double xpos, double ypos) {
-    GamePtr(window)->getMouseHandler()->handleMouseScroll(window, xpos, ypos);
-}
-
-MouseHandler* Game::getMouseHandler() {
-    return &mouse_handler_;
-}
-
-KeyboardHandler* Game::getKeyboardHandler() {
-    return &keyboard_handler_;
+    GamePtr(window)->input_.mouse_handler.handleMouseScroll(window, xpos, ypos);
 }
 
 void Game::addGameObject(GameObject* obj) {
@@ -65,11 +52,14 @@ void Game::setDebugFunction(std::function<void(Game&)> debugFunction) {
 /*
  * Creates OpenGL context and spawns window
  */
-Game::Game(int window_width, int window_height) {
+Game::Game(int window_width, int window_height) :
+    window_width_(window_width), window_height_(window_height),
+    render_pipeline_(window_width, window_height)
+{
+
+    DEBUG_PRINT("Initializing OpenGL window...");
 
     // intialize window
-    window_width_ = window_width;
-    window_height_ = window_height;
     glfwSetErrorCallback([](int error, const char* description) {
         std::cerr << "ENGINE ERROR: with code: " << error << " and desc: " << description << std::endl;
     });
@@ -89,7 +79,7 @@ Game::Game(int window_width, int window_height) {
     }   
     
     glViewport(0, 0, window_width_, window_height_);
-    
+    /*
     // Initialize rendering state
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
@@ -99,21 +89,18 @@ Game::Game(int window_width, int window_height) {
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     glClearColor(23.0f/255.0f, 19.0f/255.0f, 19.0f/255.0f, 1.0f);
+    */
+
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    
+
     // set callback functions
     glfwSetWindowUserPointer(window_, this);
     glfwSetFramebufferSizeCallback(window_, Game::frameBufferSizeCallback);
     glfwSetKeyCallback(window_, Game::keyCallback);
     glfwSetCursorPosCallback(window_, Game:: mouseMoveCallback);
 
-    // Intialize input handlers:
-    mouse_handler_ = MouseHandler();
-    keyboard_handler_ = KeyboardHandler(); 
-    
-    // Gather Assets
-    PathUtils::init();
-    AssetManager::init();
+    DEBUG_PRINT("OpenGL window initialized");
+    DEBUG_PRINT("Creating Game...");
 
     // generate light UBO
     glGenBuffers(1, &lightUBO_);
@@ -127,9 +114,18 @@ Game::Game(int window_width, int window_height) {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraData), nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, (int)UBOBinding::Camera, cameraUBO_);
     
+    // Setup camera
+    camera_.addComponent<FreeCamera>(&input_);
+    camera_.addComponent<Transform>();
+    addGameObject(&camera_);
+
+    // Setup Render Pipeline
+    render_pipeline_.setWindow(window_);
+    render_pipeline_.resetRenderConfig();
+
     /*
      * Generate only other Frame Buffer
-     */
+     
     glGenFramebuffers(1, &frame_buffer_);
     glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
     
@@ -154,7 +150,8 @@ Game::Game(int window_width, int window_height) {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    postEffect_ = AssetManager::defaultShaders().noPostEffect_;
+    postEffect_ = EngineAssets::defaultShaders().noPostEffect_;
+    */
 }
 
 
@@ -163,28 +160,32 @@ Game::Game(int window_width, int window_height) {
  */
 void Game::Loop() {
 
-    if (camera_ == nullptr) { std::cout << "Engine Error: No Camera Set" << std::endl; };
+    DEBUG_PRINT("Starting Game Loop");
 
     while(!glfwWindowShouldClose(window_)) {
 
         // gather user input and update input handlers
-        keyboard_handler_.clearStates();
+        input_.keyboard_handler.clearStates();
         glfwPollEvents();
-        mouse_handler_.update();  
+        input_.mouse_handler.update(); 
 
         // check exit
-        if (keyboard_handler_.getKeyDown(GLFW_KEY_ESCAPE)) {
+        if (input_.keyboard_handler.getKeyDown(GLFW_KEY_ESCAPE)) {
             glfwSetWindowShouldClose(window_, true);
         }
 
         DeltaClock::tick();
+
         // Update all game objects
         for (GameObject* obj : game_objects_) {
             obj->updateComponents();
         }
 
         writeToUBOs();
+
+        render_pipeline_.renderScreen(game_objects_);
         
+        /*
         bool useFrameBuffer = true;
 
         // Draw to frame buffer for cool post processing effects
@@ -212,6 +213,7 @@ void Game::Loop() {
 
         if (useFrameBuffer)
             drawScreenBuffer();
+        */
 
         // call debug function
         if (debugFunction_) {
@@ -219,7 +221,7 @@ void Game::Loop() {
         }
         
         // Update screen
-        glfwSwapBuffers(window_);
+        //glfwSwapBuffers(window_);
     }
 }
 
@@ -233,17 +235,18 @@ void Game::writeToUBOs() {
         }
     }
     light_block.lightCount[0] = lightsFound;
-
     glBindBuffer(GL_UNIFORM_BUFFER, lightUBO_);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightBlock), &light_block);
         
     // fill Camera UBO
-    CameraData cameraData = camera_->getData();
+    FreeCamera* c = camera_.getComponents()->get<FreeCamera>();
+    CameraData cameraData = c->getData();
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO_);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraData), &cameraData); 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
+/*
 void Game::drawScreenBuffer() {
     glDisable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -258,7 +261,7 @@ void Game::drawScreenBuffer() {
     glBindVertexBuffer(0, quad.VBO_, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad.EBO_);
     //glBindVertexArray(quad.VAO_);
-    glDrawElements(GL_TRIANGLES, quad.indices_.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, quad.num_indices_, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
@@ -274,11 +277,12 @@ void Game::drawSkybox() {
     glBindVertexBuffer(0, mesh.VBO_, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO_);
     //glBindVertexArray(mesh.VAO_);
-    glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, mesh.num_indices_, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     glDepthFunc(GL_LESS);
 }
-
+*/
+/*
 void Game::applyGlobalUniforms(const Shader& shader) {
     if (hasSkybox_) {
         const Texture& texture = AssetManager::accessAsset<Texture>(skyboxTexture_);
@@ -290,4 +294,5 @@ void Game::applyGlobalUniforms(const Shader& shader) {
 void Game::setCamera(Camera* camera) {
     camera_ = camera;
     //camera_->setAspectRatio((float)window_width_/(float)window_height_);
-}
+}   
+*/

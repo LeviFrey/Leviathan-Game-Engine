@@ -44,11 +44,9 @@ class SpotLight : public LightSource {
                     std::cos(glm::radians(outerCutoff_)), 
                     1.0f, 1.0f);
             data.direction_ = glm::vec4(direction_, 1.0f);
-
-            Transform* t = getGameObject()->getComponent<Transform>();
-            if (t) {
-                data.position_type_ = glm::vec4(t->getWorldPosition(), 1.0f);
-            }
+            
+            Transform* t = getSiblingComponent<Transform>();
+            data.position_type_ = glm::vec4(t->getWorldPosition(), 1.0f);
             data.position_type_[3]  = LightType::SPOT;
 
             return data;

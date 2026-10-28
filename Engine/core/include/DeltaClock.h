@@ -1,5 +1,4 @@
-#ifndef DELTACLOCK
-#define DELTACLOCK
+#pragma once
 #include <GLFW/glfw3.h>
 class DeltaClock {
     public:
@@ -12,5 +11,3 @@ class DeltaClock {
         static float lastTime_;
         static float deltaTime_;
 };
-
-#endif

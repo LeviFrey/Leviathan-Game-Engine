@@ -2,7 +2,6 @@
 #define LIGHTSOURCE_H
 #include <glm/glm.hpp>
 #include "Component.h"
-#include "Shader.h"
 #include "LightData.h"
 
 class LightSource : public Component {
@@ -31,6 +30,7 @@ class LightSource : public Component {
         virtual ~LightSource() = default;
         bool getOn() { return on_; }
         void flipOnOff() { on_ = !on_; };
+    
     private:
         bool on_ = true;
         glm::vec3 ambient_;

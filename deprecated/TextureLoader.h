@@ -55,13 +55,16 @@ class TextureLoader {
  
 
         // posx, negx, posy, negy, posz, negz
-        static Texture loadCubemapFromFile(
+        static Cubemap loadCubemapFromFile(
             std::array<std::filesystem::path, 6> paths);
+        static Cubemap loadCubemapFromData(
+            std::array<const unsigned char*, 6> faces, unsigned int size);
 
         struct EmptyCubemapContext {
             GLenum format = GL_FLOAT;
         };
-        static Texture createEmptyCubemap(
-                unsigned int size, 
-                EmptyCubemapContext context);
+        static Cubemap createEmptyCubemap(
+            unsigned int size, 
+            EmptyCubemapContext context);
 };
+

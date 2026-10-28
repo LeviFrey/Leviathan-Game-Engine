@@ -21,8 +21,6 @@
 #include "PathUtils.h"
 #include "AssetTypes.h"
 #include "Tools/Tools.h"
-#include "TextureLoader.h"
-#include "ShaderLoader.h"
 
 /*
  * Umbrella Headers: *MUST INCLUDE EVERYTHING IN ITS FOLDER*
