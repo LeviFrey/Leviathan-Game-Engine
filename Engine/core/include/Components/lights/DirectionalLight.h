@@ -22,12 +22,6 @@ class DirectionalLight : public LightSource {
         DirectionalLight(glm::vec3 direction) : LightSource() {
             direction_ = direction;
         }
-        /*
-        void applyUniforms(Shader* shader) override {
-            LightSource::applyUniforms(shader);
-            shader->setVec3("light.direction", direction_);
-        }
-        */
 
         LightData packLightData() const override {
             LightData data;
@@ -36,7 +30,7 @@ class DirectionalLight : public LightSource {
             data.specular_ = glm::vec4(getSpecular(), 1.0f);
             data.direction_ = glm::vec4(direction_, 1.0f);
 
-            Transform* t = getGameObject()->getComponent<Transform>();
+            Transform* t = getSiblingComponent<Transform>();
             if (t) {
                 data.position_type_ = glm::vec4(t->getWorldPosition(), 1.0f);
             }

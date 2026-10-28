@@ -9,27 +9,27 @@
 #include <GLFW/glfw3.h>
 
 // From Engine
-#include "Input/MouseHandler.h"
-#include "Input/KeyboardHandler.h"
 #include "Components/Camera.h"
-#include "Components/Renderer.h"
 #include "Components/LightSource.h"
-#include "Shader.h"
-#include "Texture.h"
 #include "AssetTypes.h"
 #include "GameObject.h"
+#include "RenderPipeline.h"
+#include "AssetManager.h"
+#include "Input/InputHandler.h"
 
 class Game {
     public:
         Game(int window_width, int window_height);
-        void setPostProcessingEffect(ShaderID shader) { postEffect_ = shader; }
         void setSkybox(TextureID texture) {
             hasSkybox_ = true;
             skyboxTexture_ = texture;
         }
-        void setCamera(Camera* camera);
-        Camera* getCamera() { return camera_; }
+
+        Camera* getCamera() { 
+            return camera_.getComponents()->get<Camera>();
+        }
         
+        // TODO: make these non-static
         static Game* GamePtr(GLFWwindow* window);
         static void frameBufferSizeCallback(GLFWwindow* window, int width, int height); 
         static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -37,15 +37,22 @@ class Game {
         static void scrollCallback(GLFWwindow* window, double xpos, double ypos);
         void setDebugFunction(std::function<void(Game&)> debugFunction);
 
-        MouseHandler* getMouseHandler();
-        KeyboardHandler* getKeyboardHandler();
+        RenderPipeline& getRenderPipeline() { return render_pipeline_; }
 
-        
         void Loop();
         void addGameObject(GameObject* obj);
         void addLightSource(LightSource* light);
-        void applyGlobalUniforms(const Shader& shader);
+        InputHandler& getInputHandler() { return input_; }
+        //void applyGlobalUniforms(const Shader& shader);
     private:
+ 
+        // -- Game Context --
+        AssetManager asset_manager_;
+        InputHandler input_;
+
+        // -- Game Loop Processing abstractions --
+        RenderPipeline render_pipeline_;
+
         // -- Window config --
         int window_width_;
         int window_height_;
@@ -54,25 +61,16 @@ class Game {
         // -- GLFW library stuff --
         GLFWwindow* window_;
         
-        // -- Handlers --
-        MouseHandler mouse_handler_;
-        KeyboardHandler keyboard_handler_;
-
         //  -- Game object handling --
         std::vector<GameObject*> game_objects_;
         std::vector<LightSource*> light_sources_;
-        Camera* camera_;
+
+        GameObject camera_;
         
         // -- Global data UBOs --
         GLuint lightUBO_;
         GLuint cameraUBO_;
         
-        // -- Frame Buffer config -- 
-        ShaderID postEffect_;
-        GLuint frame_buffer_;
-        GLuint rbo_;
-        Texture buffer_texture_;
-
         // -- skybox config --
         TextureID skyboxTexture_;
         bool hasSkybox_ = false;
@@ -81,6 +79,4 @@ class Game {
          * Functions used for rendering pipeline
          */
         void writeToUBOs();
-        void drawSkybox();
-        void drawScreenBuffer();
 };

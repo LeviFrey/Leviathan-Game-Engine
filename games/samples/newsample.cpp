@@ -1,6 +1,6 @@
-#include "Engine.h"
 
 int main() {
+    /*
     int window_width = 1000;
     int window_height = 1000;
     Game game(window_width, window_height);
@@ -36,6 +36,7 @@ int main() {
     game.addGameObject(&camera);
 
     game.Loop();
+    */
     
     return 0;
 }

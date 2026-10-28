@@ -13,9 +13,9 @@ Model ModelLoader::loadModelFromFile(const std::filesystem::path& path) {
     }
 
     LoadContext context;
-    context.directory_ = path.parent_path();
+    context.directory = path.parent_path();
     processNode(scene->mRootNode, scene, context);
-    return context.model_;
+    return std::move(context.model);
 }
 
 void ModelLoader::processNode(aiNode* node, const aiScene* scene, LoadContext& context) {
@@ -67,36 +67,53 @@ void ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, LoadContext& c
         }
     }
     
-    Mesh mesh_obj(vertices, indices);
 
-    auto it = context.material_cache_.find(mesh->mMaterialIndex);
-    Material mat;
+    Mesh* new_mesh = context.model.addUniqueMesh(Mesh(vertices, indices));
+    Material* new_mat = getOrCreateMaterial(mesh, scene, context);
+
+    context.model.addPart(new_mesh, new_mat);
+}
+
+Material* ModelLoader::getOrCreateMaterial(
+    aiMesh* mesh, 
+    const aiScene* 
+    scene, 
+    LoadContext& context) 
+{
+    auto it = context.material_cache.find(mesh->mMaterialIndex);
+    Material* new_mat;
 
     // Use cached material
-    if (it != context.material_cache_.end()) {
-        mat = it->second;
+    if (it != context.material_cache.end()) {
+        new_mat = it->second;
     }
     
     // Create a new material and assign a new ID
     else {
-        Material newMaterial;
         
         // Get textures
         aiMaterial* assimp_material = scene->mMaterials[mesh->mMaterialIndex];
-        newMaterial.diffuse_ = loadMaterialTextures(assimp_material, aiTextureType_DIFFUSE, context);
-        newMaterial.specular_ = loadMaterialTextures(assimp_material, aiTextureType_SPECULAR, context);
+        Texture*  diffuse = 
+            context.model.addUniqueTexture<Texture>(
+                    loadMaterialTextures(assimp_material, aiTextureType_DIFFUSE, context));
+        Texture* specular = 
+            context.model.addUniqueTexture<Texture>(
+                    loadMaterialTextures(assimp_material, aiTextureType_SPECULAR, context));
+
         // Get shininess
         int shininess;
         if (assimp_material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
             if (shininess <= 0.0f)
                 shininess = 1.0f;
-            newMaterial.shininess_ = shininess;
+            shininess = shininess;
         }
         
-        // Fill the Material object, add it to the assets, and cache it
-        Material mat = newMaterial;
+        new_mat = context.model.addUniqueMaterial<PhongMaterial>(
+                diffuse, specular, shininess, 1.0f);
+        context.material_cache.insert({mesh->mMaterialIndex, new_mat});
     }
-    context.model_.parts_.push_back({mesh_obj, mat});
+
+    return new_mat;
 }
 
 Texture ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, LoadContext& context) {
@@ -108,7 +125,7 @@ Texture ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, L
     aiString str;
     mat->GetTexture(type, 0, &str);
     string subPath = str.C_Str();
-    const std::filesystem::path newPath = context.directory_ / subPath;
+    const std::filesystem::path newPath = context.directory / subPath;
     return TextureLoader::loadTextureFromFile(newPath, {});
 }
 

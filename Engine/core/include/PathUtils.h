@@ -4,13 +4,6 @@
 #include <limits.h>
 
 namespace PathUtils {
-    
-inline std::filesystem::path projectDir;
-inline std::filesystem::path executableDir;
-inline std::filesystem::path assetDir;
-inline std::filesystem::path shaderDir;
-inline std::filesystem::path objectDir;
-inline std::filesystem::path textureDir;
 
 inline std::filesystem::path getExecutableDir() {
     char buffer[PATH_MAX];
@@ -19,16 +12,15 @@ inline std::filesystem::path getExecutableDir() {
     buffer[len] = '\0';
     return std::filesystem::path(buffer).parent_path();
 }
-    
-inline void init() {
-    executableDir = getExecutableDir();
-    projectDir = executableDir.parent_path();
-    assetDir = projectDir / "Engine/resources";
-    shaderDir = assetDir / "shaders";
-    objectDir = assetDir / "objects";
-    textureDir = assetDir / "textures";
-}
 
-}
+
+inline std::filesystem::path executableDir = getExecutableDir();
+inline std::filesystem::path projectDir = executableDir.parent_path();
+inline std::filesystem::path assetDir   = projectDir / "Engine/resources";
+inline std::filesystem::path shaderDir  = assetDir / "shaders";
+inline std::filesystem::path objectDir  = assetDir / "objects";
+inline std::filesystem::path textureDir = assetDir / "textures";
+
+};
 
 

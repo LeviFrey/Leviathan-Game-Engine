@@ -2,17 +2,17 @@
 #include "Input/KeyboardHandler.h"
 #include "Input/MouseHandler.h"
 #include "Components/Transform.h"
-#include "Game.h"
 #include "DeltaClock.h"
 
-void FreeCamera::update() {
 
-    KeyboardHandler* kh = getGameObject()->getGame()->getKeyboardHandler();
-    MouseHandler* mh = getGameObject()->getGame()->getMouseHandler();
-    Transform* t = getGameObject()->getComponent<Transform>();
+void FreeCamera::update() {
     
-    yaw_ += mh->getMouseXOffset() * sensitivity_ * DeltaClock::getDeltaTime();
-    pitch_ -= mh->getMouseYOffset() * sensitivity_ * DeltaClock::getDeltaTime();
+    MouseHandler& mh = input_->mouse_handler;
+    KeyboardHandler& kh = input_->keyboard_handler;
+    Transform* t = getSiblingComponents()->get<Transform>();
+
+    yaw_ += mh.getMouseXOffset() * sensitivity_ * DeltaClock::getDeltaTime();
+    pitch_ -= mh.getMouseYOffset() * sensitivity_ * DeltaClock::getDeltaTime();
     
     if (pitch_ > 89.0f) { pitch_ = 89.0f; }
     if (pitch_ < -89.0f) { pitch_ = -89.0f; }
@@ -21,18 +21,19 @@ void FreeCamera::update() {
         glm::angleAxis(glm::radians(yaw_), glm::vec3(0.0f, -1.0f, 0.0f)) *
         glm::angleAxis(glm::radians(pitch_), glm::vec3(0.0f, 0.0f, 1.0f));
     t->setRotation(rotation);
-    if (kh->getKeyPressed(GLFW_KEY_W)) {
+    if (kh.getKeyPressed(GLFW_KEY_W)) {
         t->translate(DeltaClock::getDeltaTime() * speed_ * getFront());
     }
-    if (kh->getKeyPressed(GLFW_KEY_S)) {
+    if (kh.getKeyPressed(GLFW_KEY_S)) {
         t->translate(-DeltaClock::getDeltaTime() * speed_ * getFront());
     }
-    if (kh->getKeyPressed(GLFW_KEY_A)) {
+    if (kh.getKeyPressed(GLFW_KEY_A)) {
         t->translate(-DeltaClock::getDeltaTime() * glm::normalize(glm::cross(getFront(), up_)) * speed_);
     }
-    if(kh->getKeyPressed(GLFW_KEY_D)) {
+    if(kh.getKeyPressed(GLFW_KEY_D)) {
         t->translate(DeltaClock::getDeltaTime() * glm::normalize(glm::cross(getFront(), up_)) * speed_);
     }
+    glClearColor(getFront().x, getFront().y, getFront().z, 1.0f);
 }
     
     

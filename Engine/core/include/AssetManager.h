@@ -5,16 +5,15 @@
 #include <map>
 #include <vector>
 #include <filesystem>
+#include <memory>
 
 // from Engine
 #include "Mesh.h"
 #include "Texture.h"
-#include "Cubemap.h"
 #include "Shader.h"
 #include "Model.h"
 #include "AssetTypes.h"
 #include "Material.h"
-#include "Components/Renderer.h"
 
 // Used for Assimp
 #include <assimp/Importer.hpp>
@@ -80,106 +79,128 @@ class AssetManager {
         
         template <typename T>
         struct AssetStorage {
-            std::vector<T> data_;
-            std::unordered_map<std::string, AssetID<T>> registry_;
+            std::vector<std::unique_ptr<T>> data;
+            std::unordered_map<std::string, AssetID<T>> registry;
         };
         
         // Data storages
-        inline static AssetStorage<Mesh> mesh_storage_;
-        inline static AssetStorage<Texture> texture_storage_;
-        inline static AssetStorage<Material> material_storage_;
-        inline static AssetStorage<Shader> shader_storage_;
-        inline static AssetStorage<Model> model_storage_;
-        inline static AssetStorage<RenderDataConfig> rdc_storage_;
+        AssetStorage<Mesh> mesh_storage_;
+        AssetStorage<Texture> texture_storage_;
+        AssetStorage<Cubemap> cubemap_storage_;
+        AssetStorage<Material> material_storage_;
+        AssetStorage<Shader> shader_storage_;
+        AssetStorage<Model> model_storage_;
+        AssetStorage<VertexArrayObject> rdc_storage_;
 
         template <typename T>
-        static AssetStorage<T>& getStorage();
+        AssetStorage<T>& getStorage();
 
         // ---------------------------------------------------------------
         // Storage definitions for assets loaded through loader programs |
         // ---------------------------------------------------------------
         template <typename T>
-        struct AssetCache {
-            std::map<AssetKey<T>, AssetID<T>> cache_;
-        };
+        using AssetCache = std::map<AssetKey<T>, AssetID<T>>;
         
         // Data Caches
-        inline static AssetCache<Texture> texture_cache_;
-        inline static AssetCache<Cubemap> cubemap_cache_;
-        inline static AssetCache<Model> model_cache_;
-        inline static AssetCache<Shader> shader_cache_;
+        AssetCache<Texture> texture_cache_;
+        AssetCache<Cubemap> cubemap_cache_;
+        AssetCache<Model> model_cache_;
+        AssetCache<Shader> shader_cache_;
 
         template <typename T>
-        static AssetCache<T> getCache();
+        AssetCache<T>& getCache();
 
         template <typename T>
-        static T loadOnCacheMiss(const AssetKey<T>& key);
+        T loadOnCacheMiss(const AssetKey<T>& key);
 
     public:
         
-        // STORE custom asset by NAMETAG
+        //  -- STORE: copy/move custom asset into AssetManager
+        //  allows for:
+        //  storeAsset<AssetType>(asset);
+        //  storeAsset<AssetType>(std::move(Asset));
+        //  storeAsset<AssetType>(AssetType(param1, param2, ...);
         template <typename T>
-        static AssetID<T> storeAssetByName(T asset, const std::string& nametag) {
+        AssetID<T> storeAsset(T asset, const std::string& nametag = {}) {
             auto& asset_storage = getStorage<T>();
-            asset_storage.data_.push_back(asset);
-            AssetID<T> id = {asset_storage.data_.size() - 1};
-            asset_storage.registry_.insert({nametag, id});
-            return id;
+
+            asset_storage.data.push_back(
+                std::make_unique<T>(std::move(asset))
+            );
+
+            AssetID<T> asset_id{asset_storage.data.size() - 1};
+
+            if (!nametag.empty()) {
+                asset_storage.registry.try_emplace(nametag, asset_id);
+            }
+
+            return asset_id;
         }
 
-        // STORE custom asset without specific nametag
-        template <typename T>
-        static AssetID<T> storeAsset(T asset) {
+        // -- EMPLACE: create asset within AssetManager with nametag
+        template<typename T, typename... Args>
+        AssetID<T> emplaceNamedAsset(const std::string nametag, Args&&... args) {
+            AssetID<T> asset_id = emplaceAsset<T>(std::forward<Args>(args)...);
+            
             auto& asset_storage = getStorage<T>();
-            asset_storage.data_.push_back(asset);
-            return {asset_storage.data_.size() - 1};
+            asset_storage.registry.try_emplace(nametag, asset_id);
+
+            return asset_id;
+        }
+        
+        // -- EMPLACE: create asset within AssetManager, no nametag
+        template<typename T, typename... Args>
+        AssetID<T> emplaceAsset(Args&&... args) {
+            auto& asset_storage = getStorage<T>();
+
+            asset_storage.data.emplace_back(
+                std::make_unique<T>(std::forward<Args>(args)...)
+            );
+
+            AssetID<T> asset_id{asset_storage.data.size() - 1};
+
+            return asset_id;
         }
         
         // GET custom asset by NAMETAG
         template <typename T>
-        static T& getAssetByName(const std::string& nametag) {
+        T& getAssetByName(const std::string& nametag) {
             auto& asset_storage = getStorage<T>();
-            return asset_storage.data_.at(asset_storage.registry_.at(nametag));
+            return *asset_storage.data.at(asset_storage.registry.at(nametag));
         }
 
         // GET custom asset by ID
         template <typename T>
-        static T& getAssetByID(const AssetID<T>& id) {
+        T& getAssetByID(const AssetID<T>& id) {
             auto& asset_storage = getStorage<T>();
-            return asset_storage.data_.at(id.value_);
+            return *asset_storage.data.at(id.value);
         }
 
-        
-        // ACCESS asset from data cache for filesystem-loaded assets
-        template <typename T>
-        static T& loadAsset(const AssetKey<T>& key) {
-            auto& asset_cache = getCache<T>();
-            auto& asset_storage = getStorage<T>();
-            auto it = asset_cache.find(key);
-            if (it != asset_cache.end()) {
-                return getAssetByID(it.second);
-            } else {
-                asset_storage.data_.push_back(loadOnCacheMiss<T>(key));
-                AssetID<T> id = asset_storage.data_.size()-1;
-                asset_cache.emplace(key, id);
-                return getAssetByID(id);
-            }
-        }
-        
         // ACCESS asset ID from data cache for filesystem-loaded assets
         template <typename T>
-        static AssetID<T> loadAssetID(const AssetKey<T>& key) {
+        AssetID<T> loadAssetID(const AssetKey<T>& key) {
             auto& asset_cache = getCache<T>();
+
             auto it = asset_cache.find(key);
             if (it != asset_cache.end()) {
                 return it->second;
             } else {
+                T asset = loadOnCacheMiss<T>(key);  
                 auto& asset_storage = getStorage<T>();
-                asset_storage.data_.push_back(loadOnCacheMiss<T>(key));
-                AssetID<T> id = {asset_storage.data_.size() - 1};
-                asset_cache.emplace(key, id);
-                return id;
+                asset_storage.data.push_back(std::make_unique<T>(std::move(asset)));
+
+                AssetID<T> asset_id = {asset_storage.data.size() - 1};
+                asset_cache.emplace(key, asset_id);
+
+                return asset_id;
             }
+        }
+
+        // ACCESS asset from data cache for filesystem-loaded assets
+        template <typename T>
+        T& loadAsset(const AssetKey<T>& key) {
+            AssetID<T> asset_id = loadAssetID<T>(key);
+            return getAssetByID<T>(asset_id);
         }
 
 };

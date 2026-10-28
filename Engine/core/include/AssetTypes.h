@@ -1,22 +1,22 @@
 #pragma once
-#include <cstdint>
 
-struct Model;
-struct Mesh;
-struct Texture;
-struct Material;
-struct Shader;
-class RenderDataConfig;
+#include "Model.h"
+#include "Mesh.h"
+#include "Texture.h"
+#include "Material.h"
+#include "Shader.h"
+#include "VertexArrayObject.h"
 
 template <typename T>
 struct AssetID {
-    uint32_t value;
+    std::size_t value;
 };
 
 using ModelID    = AssetID<Model>;
 using MeshID     = AssetID<Mesh>;
 using TextureID  = AssetID<Texture>;
+using CubemapID  = AssetID<Cubemap>;
 using MaterialID = AssetID<Material>;
 using ShaderID   = AssetID<Shader>;
-using RenderDataConfigID      = AssetID<RenderDataConfig>;
+using RenderDataConfigID = AssetID<VertexArrayObject>;
 

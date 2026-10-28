@@ -1,6 +1,5 @@
 #include "Components/Transform.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include "GameObject.h"
 
 void Transform::translate(glm::vec3 translation) {
     position_ += translation;
@@ -46,9 +45,8 @@ glm::quat Transform::getLocalRotation() {
 }
 
 glm::quat Transform::getWorldRotation() {
-    GameObject* parent = getGameObject()->getParent();
-    if (parent && parent->hasComponent<Transform>()) {
-        return parent->getComponent<Transform>()->getWorldRotation() * rotation_;
+    if (hasParentComponents() && getParentComponents()->contains<Transform>()) {
+        return getParentComponents()->get<Transform>()->getWorldRotation() * rotation_;
     }
     return rotation_;
 }
@@ -63,9 +61,10 @@ glm::mat4 Transform::getWorldMatrix() {
         glm::mat4 rotationMatrix = glm::toMat4(rotation_);
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale_);
         local_matrix_ = translationMatrix * rotationMatrix * scaleMatrix;
-        GameObject* parent = getGameObject()->getParent();
-        if (parent && parent->hasComponent<Transform>()) {
-            world_matrix_ = parent->getComponent<Transform>()->getWorldMatrix() * local_matrix_;
+        if (hasParentComponents() && getParentComponents()->contains<Transform>()) {
+            Transform* parent_transform = getParentComponents()->get<Transform>();
+            glm::mat4 parent_world_matrix = parent_transform->getWorldMatrix();
+            world_matrix_ = parent_world_matrix * local_matrix_;
         } else {
             world_matrix_ = local_matrix_;
         }
@@ -76,9 +75,10 @@ glm::mat4 Transform::getWorldMatrix() {
 
 void Transform::makeDirty() {
     dirty_ = true;
-    for (auto* child : getGameObject()->getChildren()) {
-        if (child->hasComponent<Transform>()) {
-            child->getComponent<Transform>()->makeDirty();
+    for (auto* child : getChildrenComponentSets()) {
+        ComponentSet* child_comps = child->getData(); 
+        if (child_comps->contains<Transform>()) {
+            child_comps->get<Transform>()->makeDirty();
         }
     }
 }

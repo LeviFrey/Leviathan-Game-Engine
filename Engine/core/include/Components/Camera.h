@@ -2,7 +2,6 @@
 #include <glm/glm.hpp>
 #include "Components/Component.h"
 #include "CameraData.h"
-#include <iostream>
 
 class Camera : public Component {
     public:
@@ -22,14 +21,15 @@ class Camera : public Component {
 
         glm::mat4 getView();
         glm::mat4 getProjection();
-        CameraData getData();
         virtual glm::vec3 getFront();
         virtual glm::vec3 getPosition();
+        CameraData getData();
 
         void setSensitivity(float sensitivity) { sensitivity_ = sensitivity; }
         void setAspectRatio(float ratio) { aspect_ratio_ = ratio; }
 
     protected:
+        
         float fov_;
         float sensitivity_;
         glm::vec3 up_;

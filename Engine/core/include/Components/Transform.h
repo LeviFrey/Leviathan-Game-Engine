@@ -8,10 +8,11 @@
 
 /*
  * Component that stores position, rotation, scale of a game objects
- * Interacts with children/parent objects, propgating matrix to children and receiving matrix from parents
+ * Interacts with children/parent objects, propogating matrix to children and receiving matrix from parents
  */
 class Transform : public Component { 
     public:
+
         void translate(glm::vec3 translation);
 
         //rotations
@@ -30,15 +31,15 @@ class Transform : public Component {
         glm::vec3 getScale();
 
         glm::mat4 getWorldMatrix();
-        void makeDirty();
 
     private:
+        void makeDirty();
         glm::vec3 position_{0.0f};
         glm::quat rotation_{1, 0, 0, 0};
         glm::vec3 scale_{1.0f, 1.0f, 1.0f};
 
         glm::mat4 local_matrix_{1.0f};
-        glm::mat4 world_matrix_{1.0f};
+        glm::mat4 world_matrix_{glm::mat4(1.0f)};
 
         bool dirty_{true};
 };

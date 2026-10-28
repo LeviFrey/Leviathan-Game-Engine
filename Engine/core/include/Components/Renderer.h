@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Component.h"
-#include "AssetTypes.h"
+#include "Components/Component.h"
+#include "Components/Transform.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Shader.h"
-#include "RenderDataConfig.h"
+#include "EngineAssets.h"
+#include "Model.h"
 
 struct OutlineConfig {
     bool active_ = false;
@@ -17,31 +18,46 @@ struct DebugConfig {
     bool visualizeNormals_ = false;
 };
 
-
 class Renderer : public Component {
     public:
 
-        Renderer(const Model& model, const Shader& shader);
+        Renderer(
+            Model* model = nullptr, 
+            Shader* shader = &EngineAssets::PHONG_SHADER, 
+            VertexArrayObject* vao = &EngineAssets::DEFAULT_VAO
+        );
 
-        // Main utilization
-        void render();
+        // Component inherited
         void update() override {}
+        
+        // Renderer Utilization
+        void render();
+        void setShader(Shader* shader) { main_shader_ = shader; }
 
         // Possibly temporary config options
         OutlineConfig& getOutlineConfig() { return outline_; }
         DebugConfig& getDebugConfig() { return debug_; }
 
     private:
-        const RenderDataConfig& render_config_;
-        const Model& model_;
-        const Shader& shader_;
-        void useMaterial(const Material& material);
-        void drawMesh(const Mesh& mesh);
-        void drawNormals(const Mesh& mesh, glm::mat4 transform);
+        
+        // DATA
+        VertexArrayObject* vao_;
+        Model* model_;
+        Shader* main_shader_;
+
+        Shader* outline_shader_ = nullptr;
+        Shader* norm_shader_ = nullptr;
+        Cubemap* skybox_ = nullptr;
+
+
+        // HELPER FUNCTIONS
+        void useMaterial(Material* material);
+        void drawMesh(Mesh* mesh);
+        void drawNormals(Mesh* mesh, glm::mat4 transform);
 
         // Render Settings:
         OutlineConfig outline_{false, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.05f};
-        void drawOutline(const Mesh& mesh, glm::mat4 transform);
+        void drawOutline(Mesh* mesh, glm::mat4 transform);
         
         DebugConfig debug_;
 };

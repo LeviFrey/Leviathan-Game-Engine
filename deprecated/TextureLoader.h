@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include "Texture.h"    
-#include "Cubemap.h"
 #include <array>
 #include <glad/glad.h>
 
@@ -58,11 +57,14 @@ class TextureLoader {
         // posx, negx, posy, negy, posz, negz
         static Cubemap loadCubemapFromFile(
             std::array<std::filesystem::path, 6> paths);
+        static Cubemap loadCubemapFromData(
+            std::array<const unsigned char*, 6> faces, unsigned int size);
 
         struct EmptyCubemapContext {
             GLenum format = GL_FLOAT;
         };
         static Cubemap createEmptyCubemap(
-                unsigned int size, 
-                EmptyCubemapContext context);
+            unsigned int size, 
+            EmptyCubemapContext context);
 };
+

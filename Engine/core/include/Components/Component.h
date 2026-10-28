@@ -1,15 +1,51 @@
 #pragma once
-class GameObject;
+
+#include "TypeMap.h"
+#include "Hierarchy.h"
+
+
 class Component {
     public:
-        Component() {}
-        Component(GameObject* game_object) : game_object_(game_object) {}
+        using ComponentSet = TypeMap<Component>;
+        using ComponentNode = HierarchyNode<ComponentSet>;
+
+        Component() = default;
         virtual ~Component() = default;
+ 
         virtual void update() {}
-        virtual void init() {}
-        void setGameObject(GameObject* obj) { game_object_ = obj; }
-        GameObject* getGameObject() const { return game_object_; }
         
+        // -- Component Hierarchy API --
+
+        void setComponentNode(ComponentNode* node) { 
+            comp_node_ = node; 
+        }
+        
+        ComponentSet* getSiblingComponents() const {
+            if (!comp_node_) {
+                std::cerr << "No Node found for component" << std::endl;
+                return nullptr;
+            }
+            return comp_node_->getData();
+        }
+
+        template <typename T>
+        T* getSiblingComponent() const {
+            return getSiblingComponents()->get<T>();
+        }
+
+        std::unordered_set<ComponentNode*> getChildrenComponentSets() {
+            return comp_node_->getChildren();
+        }
+        
+        bool hasParentComponents() const {
+            return comp_node_->getParent() != nullptr;
+        }
+
+        ComponentSet* getParentComponents() const {
+            return comp_node_->getParent()->getData();
+        }
+
     private:
-        GameObject* game_object_;
+        ComponentNode* comp_node_ = nullptr;
+
 };

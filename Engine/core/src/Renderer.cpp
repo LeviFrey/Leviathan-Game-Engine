@@ -1,27 +1,31 @@
 #include "Components/Renderer.h"
 #include "Components/Transform.h"
-#include "GameObject.h"
-#include "Game.h"
-#include "AssetManager.h"
-#include "EngineAssets.h"
-#include "RenderBindings.h"
+#include "Debug.h"
+#include <GLFW/glfw3.h>
 
-Renderer::Renderer(const Model& model, const Shader& shader) : 
-    model_(model),
-    shader_(shader), 
-    render_config_(AssetManager::getAssetByID<RenderDataConfig>(EngineAssets::getDefaultRDC())) {}
+
+Renderer::Renderer(Model* model, Shader* shader, VertexArrayObject* vao) :
+model_(model), main_shader_(shader), vao_(vao)
+{}
 
 void Renderer::render() {
-    shader_.use();
-    glm::mat4 transform = getGameObject()->getComponent<Transform>()->getWorldMatrix();
-    shader_.setMat4("model", transform);
-    getGameObject()->getGame()->applyGlobalUniforms(shader_);
+    main_shader_->use();
+
+    Transform* t = getSiblingComponents()->get<Transform>(); 
+    glm::mat4 transform = t->getWorldMatrix();
+    main_shader_->setMat4("model", transform);
+    main_shader_->setFloat("time", glfwGetTime());
     
-    const std::vector<RenderPart>& model_parts = model_.getParts();
+    // reconsider this definitely, why does shader need this global information?
+    if (skybox_) {
+        glBindTextureUnit(2, skybox_->getResource());
+    }
+         
+    const std::vector<RenderPart>& model_parts = model_->getParts();
     for (int i = 0; i < model_parts.size(); i++) {
-        const Material& material = model_parts[i].material_;
-        const Mesh& mesh = model_parts[i].mesh_;
-        useMaterial(material);
+        Material* material = model_parts[i].material_;
+        Mesh* mesh = model_parts[i].mesh_;
+        material->use(main_shader_);
         
         if (outline_.active_) {
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -41,20 +45,25 @@ void Renderer::render() {
     }
 }
 
-void Renderer::useMaterial(const Material& material) {
-    shader_.use();
-    glBindTextureUnit((int)TextureBinding::Diffuse, material.diffuse_.ID_);
-    glBindTextureUnit((int)TextureBinding::Specular, material.specular_.ID_);
-    shader_.setFloat("material.shininess", material.shininess_);
-    shader_.setFloat("material.tesselationRate", material.tesselationRate_);
-}
-
-void Renderer::drawMesh(const Mesh& mesh) {
-    render_config_.bind();
-    glVertexArrayVertexBuffer(render_config_.getVAO(), 0, mesh.VBO_, 0, sizeof(Vertex));
-    glVertexArrayElementBuffer(render_config_.getVAO(), mesh.EBO_);
-    glDrawElements(GL_TRIANGLES, mesh.num_indices_, GL_UNSIGNED_INT, 0);
+void Renderer::drawMesh(Mesh* mesh) {
+    vao_->bind();
+    vao_->bindVertexBuffer(0, mesh->getVertexBuffer());
+    vao_->bindElementBuffer(mesh->getElementBuffer());
+    glDrawElements(
+        GL_TRIANGLES, 
+        mesh->getElementBuffer().getNumIndices(),
+        GL_UNSIGNED_INT,
+        nullptr
+    );
     glBindVertexArray(0);
+
+    /*
+    glVertexArrayVertexBuffer(render_config_->getVAO(), 0, mesh->VBO_, 0, sizeof(Vertex));
+    glVertexArrayElementBuffer(render_config_->getVAO(), mesh->EBO_);
+    glDrawElements(GL_TRIANGLES, mesh->num_indices_, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    */
+
     /*
     glBindVertexArray(VAO_);
     glDrawElements(GL_TRIANGLES, mesh.indices_.size(), GL_UNSIGNED_INT, 0);
@@ -62,29 +71,24 @@ void Renderer::drawMesh(const Mesh& mesh) {
     */
 }
 
-void Renderer::drawOutline(const Mesh& mesh, glm::mat4 transform) {
-    const ShaderID& outline_shader_id = EngineAssets::getOutlineShader();
-    const Shader& outline_shader = AssetManager::getAssetByID<Shader>(outline_shader_id);
+void Renderer::drawOutline(Mesh* mesh, glm::mat4 transform) {
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     glStencilMask(0x00);
     float factor = outline_.width_ + 1.0f;
     glm::mat4 scaled_transform = glm::scale(transform, glm::vec3(factor)); 
-    outline_shader.use();
-    outline_shader.setVec4("color", outline_.color_);
-    outline_shader.setMat4("model", scaled_transform);
-    getGameObject()->getGame()->applyGlobalUniforms(outline_shader);
+    outline_shader_->use();
+    outline_shader_->setVec4("color", outline_.color_);
+    outline_shader_->setMat4("model", scaled_transform);
     drawMesh(mesh);
     
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    shader_.use();
+    main_shader_->use();
 }
 
-void Renderer::drawNormals(const Mesh& mesh, glm::mat4 transform) {
-    const ShaderID& norm_shader_id = EngineAssets::getVisualizeNormalShader();
-    const Shader& norm_shader = AssetManager::getAssetByID<Shader>(norm_shader_id);
-    norm_shader.use();
-    norm_shader.setMat4("model", transform);
+void Renderer::drawNormals(Mesh* mesh, glm::mat4 transform) {
+    norm_shader_->use();
+    norm_shader_->setMat4("model", transform);
     drawMesh(mesh);
-    shader_.use();
+    main_shader_->use();
 }

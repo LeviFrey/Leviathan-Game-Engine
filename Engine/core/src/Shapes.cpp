@@ -127,7 +127,7 @@ Mesh Shapes::createCube(float size) {
         indices.push_back(i);
     }
 
-    return {vertex_list, indices};
+    return Mesh(std::move(vertex_list), std::move(indices));
 }   
 
 Mesh Shapes::createPlane(int width_n, int height_n, float edge_width, float edge_height) {

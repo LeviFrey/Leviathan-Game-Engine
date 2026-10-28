@@ -1,46 +1,89 @@
 #pragma once
-#include "AssetTypes.h"
+#include <iostream>
+#include "PathUtils.h"
+#include "Texture.h"
+#include "Shader.h"
+#include "Mesh.h"
+#include "Shapes.h"
+#include "VertexArrayObject.h"
+#include "Debug.h"
+
+namespace EngineAssets {
+
+        inline const bool start = [] {
+        DEBUG_PRINT("Creating Engine Assets..");
+        return true;
+        }();
+
+        inline const Image DEFAULT_IMAGE = [] {
+            const unsigned char black[] = {0, 0, 0, 255};
+            return Image(black, 1, 1, 4);
+        }();
+        inline const bool image = [] {
+        DEBUG_PRINT("Created Default Image!");
+        return true;
+        }();
 
 
-/*
- * TODO: consider adding a handler for assets that store whether it's been loaded or not.
- * Currently not really a problem, but later could be useful. would also decouple function from field
- * entry.
- */
-class EngineAssets {
-    public:
-        static void init();
-        
-        // FALLBACK
-        static const TextureID& getFallbackTexture() { return fallbackTexture_; }
-        static const MaterialID& getFallbackMaterial() { return fallbackMaterial_; }
+        inline Texture DEFAULT_TEXTURE(DEFAULT_IMAGE);
+        inline const bool texture = [] {
+        DEBUG_PRINT("Created Default Texture!");
+        return true;
+        }();
 
-        // RENDER OPTIONS
-        static const RenderDataConfigID& getDefaultRDC() { return defaultRDC_; }
-        static const ShaderID& getDefaultShader() { return defaultShader_; }
-        static const ShaderID& getNoPostEffect() { return noPostEffect_; }
-        static const ShaderID& getOutlineShader() { return outlineShader_; }
-        static const ShaderID& getVisualizeNormalShader() { return visualizeNormals_; }
+        inline Cubemap DEFAULT_CUBEMAP({
+            &DEFAULT_IMAGE, &DEFAULT_IMAGE,
+            &DEFAULT_IMAGE, &DEFAULT_IMAGE,
+            &DEFAULT_IMAGE, &DEFAULT_IMAGE
+        });
+        inline const bool cubemap = [] {
+        DEBUG_PRINT("Created Default Cubemap!");
+        return true;
+        }();
 
-        // UTILITY
-        static const MeshID& getUnitCube() { return unitCube_; }
-        static const ModelID& getFallBackCube() { return fallbackCube_; }
-    private:
+        inline Mesh DEFAULT_CUBE = Shapes::createCube(1.0f);
+        inline const bool cube = [] {
+        DEBUG_PRINT("Created Default Mesh!");
+        return true;
+        }();
 
-        // FALLBACK
-        static TextureID fallbackTexture_;
-        static MaterialID fallbackMaterial_;
+        inline VertexArrayObject DEFAULT_VAO = VertexArrayObject();
+        inline const bool vao = [] {
+        DEBUG_PRINT("Created Default VAO!");
+        return true;
+        }();
 
-        // RENDER OPTIONS
-        static RenderDataConfigID defaultRDC_;
-        static ShaderID defaultShader_;
-        static ShaderID noPostEffect_;
-        static ShaderID outlineShader_;
-        static ShaderID visualizeNormals_;
+        inline Shader PHONG_SHADER(
+            PathUtils::shaderDir / "default/default.vert",
+            PathUtils::shaderDir / "default/default.frag"
+        );
+        inline const bool phong = [] {
+        DEBUG_PRINT("Created Phong shader!");
+        return true;
+        }();
 
-        // Utility
-        static MeshID unitCube_;
-        static ModelID fallbackCube_;
+        inline Shader SKYBOX_SHADER(
+            PathUtils::shaderDir / "skybox/skybox.vert",
+            PathUtils::shaderDir / "skybox/skybox.frag"
+        );
+        inline const bool skybox = [] {
+        DEBUG_PRINT("Created Skybox shader!");
+        return true;
+        }();
+
+        inline Shader DEFAULT_SCREEN_SHADER (
+            PathUtils::shaderDir / "postprocess/screen.vert",
+            PathUtils::shaderDir / "postprocess/defaultScreen.frag"
+        );
+        inline const bool screen = [] {
+        DEBUG_PRINT("Created Screen shader!");
+        return true;
+        }();
+
+        inline const bool finished = [] {
+        DEBUG_PRINT("Finished generating Engine Assets!");
+        return true;
+        }();
 
 };
 
