@@ -33,7 +33,6 @@ void FreeCamera::update() {
     if(kh.getKeyPressed(GLFW_KEY_D)) {
         t->translate(DeltaClock::getDeltaTime() * glm::normalize(glm::cross(getFront(), up_)) * speed_);
     }
-    glClearColor(getFront().x, getFront().y, getFront().z, 1.0f);
 }
     
     
