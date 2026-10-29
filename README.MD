@@ -35,7 +35,7 @@ The sample program features:
 - Customized / modular game object behavior 
 
 (run sample program)
- > bash run.sh sample
+ > bash run.sh test
 
 # Create your own game
  - Write program as FILENAME.cpp in /games
