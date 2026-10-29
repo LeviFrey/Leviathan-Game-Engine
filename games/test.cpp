@@ -35,6 +35,17 @@ int main() {
     t->translate(glm::vec3(5.0f, 0.0f, 0.0f));
 
     game.addGameObject(&test_obj);
+
+    // -- Skybox --
+    std::filesystem::path p = PathUtils::textureDir / "skybox";
+    std::array<std::filesystem::path, 6> paths{
+        p / "right.jpg", p / "left.jpg",
+        p / "top.jpg", p / "bottom.jpg",
+        p / "front.jpg", p / "back.jpg"
+    };
+    Cubemap skybox(paths);
+
+    game.getRenderPipeline().getSkybox().setTexture(&skybox);
     
     // -- Start Game --
     game.Loop();

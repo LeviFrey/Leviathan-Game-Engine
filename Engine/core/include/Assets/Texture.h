@@ -24,7 +24,6 @@ class Texture : public TextureBase {
             unload(); 
         }
         
-        // Heres a good move operator I think??
         Texture& operator=(Texture&& other) noexcept {
             if (this != &other) {
 
@@ -55,12 +54,12 @@ class Cubemap : public TextureBase {
     public:
 
         // Faces should be input as: 
-        // positive x, negative x,
-        // positive y, negative y,
-        // positive z, negative z
+        // right, left,
+        // top, top,
+        // front, back
         Cubemap(std::array<Image, 6>&& faces);
         Cubemap(std::array<const Image*, 6> faces);
-        Cubemap(const std::array<std::filesystem::path, 6>& paths);
+        Cubemap(std::array<std::filesystem::path, 6> paths);
 
     private:
         unsigned int loadResource() override;

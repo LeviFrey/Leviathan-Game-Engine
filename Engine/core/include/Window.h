@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+// Creates an OpenGL window context
 class Window {
     public:
         Window(unsigned int width, unsigned int height, const std::string& name = "");

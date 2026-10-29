@@ -24,7 +24,7 @@ class Skybox : public GameObject {
             material_->cubemap_ = texture; 
         }
 
-        Cubemap const * getTexture() const { 
+        const Cubemap* getTexture() const { 
             return material_->cubemap_; 
         }
 

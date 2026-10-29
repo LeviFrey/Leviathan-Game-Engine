@@ -38,7 +38,7 @@ class FrameBuffer : public GPUResource  {
         FrameBuffer(unsigned int width, unsigned int height) :
             width_(width), height_(height),
             render_buffer_(width_, height_),
-            texture_(std::make_unique<Texture>(Image(width_, height_, 4)))
+            texture_(std::make_unique<Texture>(Image(width_, height_, 3)))
         {}
 
         void resize(unsigned int width, unsigned int height) {
@@ -92,6 +92,7 @@ class FrameBuffer : public GPUResource  {
                 std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
             }
             
+            glBindFramebuffer(GL_FRAMEBUFFER, id);
             bindMyTexture();
             bindMyRenderBuffer();
 

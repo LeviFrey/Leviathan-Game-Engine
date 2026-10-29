@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "Components/Component.h"
-#include "CameraData.h"
+#include "GPU/CameraData.h"
 
 class Camera : public Component {
     public:

@@ -1,4 +1,4 @@
-#include "Model.h"
+#include "Assets/Model.h"
 #include "EngineAssets.h"
 
 Model::Model(const std::filesystem::path& path) : path_(path.parent_path()) {
@@ -13,7 +13,6 @@ Model::Model(const std::filesystem::path& path) : path_(path.parent_path()) {
     
     unique_materials_.reserve(scene->mNumMaterials);
     for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
-        std::cout << "load mat: " << i << std::endl;
         unique_materials_.push_back(loadMaterial(scene->mMaterials[i]));
     }
 
@@ -51,7 +50,6 @@ std::filesystem::path Model::loadTexturePath(aiMaterial* mat, aiTextureType type
     aiString str;
     mat->GetTexture(type, 0, &str);
     std::string sub_path = str.C_Str();
-    std::cout << "main: " << path_ << " sub: " << sub_path << " together: " << path_ / sub_path << std::endl;
     return path_ / sub_path;
 }
 

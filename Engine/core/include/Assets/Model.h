@@ -1,8 +1,8 @@
 #pragma once
 
 // From engine
-#include "Mesh.h"
-#include "Material.h"
+#include "Assets/Mesh.h"
+#include "Assets/Material.h"
 
 // Standard Lib
 #include <vector>

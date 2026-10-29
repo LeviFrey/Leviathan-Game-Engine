@@ -1,6 +1,6 @@
 #ifndef SHAPES_H
 #define SHAPES_H
-#include "Mesh.h"
+#include "Assets/Mesh.h"
 
 namespace Shapes {
 Mesh createCube(float size);

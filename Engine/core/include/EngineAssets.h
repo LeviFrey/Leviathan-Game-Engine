@@ -1,11 +1,11 @@
 #pragma once
 #include <iostream>
 #include "PathUtils.h"
-#include "Texture.h"
-#include "Shader.h"
-#include "Mesh.h"
+#include "Assets/Texture.h"
+#include "Assets/Shader.h"
+#include "Assets/Mesh.h"
 #include "Shapes.h"
-#include "VertexArrayObject.h"
+#include "Assets/VertexArrayObject.h"
 #include "Debug.h"
 
 namespace EngineAssets {
