@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Model.h"
-#include "Mesh.h"
-#include "Texture.h"
-#include "Material.h"
-#include "Shader.h"
-#include "VertexArrayObject.h"
+#include "Assets/Model.h"
+#include "Assets/Mesh.h"
+#include "Assets/Texture.h"
+#include "Assets/Material.h"
+#include "Assets/Shader.h"
+#include "Assets/VertexArrayObject.h"
 
 template <typename T>
 struct AssetID {

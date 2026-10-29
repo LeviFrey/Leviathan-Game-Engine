@@ -2,7 +2,7 @@
 #define LIGHTSOURCE_H
 #include <glm/glm.hpp>
 #include "Component.h"
-#include "LightData.h"
+#include "GPU/LightData.h"
 
 class LightSource : public Component {
     public:

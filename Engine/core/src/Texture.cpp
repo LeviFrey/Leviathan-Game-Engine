@@ -1,4 +1,4 @@
-#include "Texture.h"
+#include "Assets/Texture.h"
 #include <glad/glad.h>
 
 Texture::Texture(Image&& image, TextureConfig config) :
@@ -32,7 +32,7 @@ unsigned int Texture::loadResource() {
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA,
+        GL_RGB8,
         image_->getWidth(), image_->getHeight(),
         0,
         GL_RGB,
@@ -51,7 +51,7 @@ void Texture::deleteResource() {
 
 // -- CUBEMAP --
 
-Cubemap::Cubemap(const std::array<std::filesystem::path, 6>& paths) {
+Cubemap::Cubemap(std::array<std::filesystem::path, 6> paths) {
     for (int i = 0; i < 6; i++) {
         unique_faces_[i] = std::make_unique<Image>(paths[i]);
         faces_[i] = unique_faces_[i].get();

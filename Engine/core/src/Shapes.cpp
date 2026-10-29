@@ -1,5 +1,4 @@
 #include <vector>
-#include "Mesh.h"
 #include "Shapes.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

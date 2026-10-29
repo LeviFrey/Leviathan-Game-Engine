@@ -1,9 +1,10 @@
 #pragma once
 #include "GameObject.h"
-#include "Shader.h"
+#include "Assets/Shader.h"
 #include "Shapes.h"
-#include "Texture.h"
+#include "Assets/Texture.h"
 #include "Components/Renderer.h"
+#include "Components/Transform.h"
 #include "EngineAssets.h"
 
 class ScreenObject : public GameObject {

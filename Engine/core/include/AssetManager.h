@@ -8,12 +8,12 @@
 #include <memory>
 
 // from Engine
-#include "Mesh.h"
-#include "Texture.h"
-#include "Shader.h"
-#include "Model.h"
+#include "Assets/Mesh.h"
+#include "Assets/Texture.h"
+#include "Assets/Shader.h"
+#include "Assets/Model.h"
+#include "Assets/Material.h"
 #include "AssetTypes.h"
-#include "Material.h"
 
 // Used for Assimp
 #include <assimp/Importer.hpp>

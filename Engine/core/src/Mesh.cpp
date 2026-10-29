@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "Assets/Mesh.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -31,6 +31,5 @@ unsigned int ElementBuffer::loadResource() {
     );
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    std::cout << "Loaded EBO: " << EBO << std::endl;
     return EBO;
 }

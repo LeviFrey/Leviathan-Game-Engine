@@ -1,7 +1,7 @@
 #version 460 core
 
 
-layout (binding = 2) uniform samplerCube cubemap;
+layout (binding = 0) uniform samplerCube cubemap;
 
 in VS_OUT {
     vec3 TexCoords;

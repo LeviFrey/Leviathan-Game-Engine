@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Components/Component.h"
-#include "Components/Transform.h"
-#include "Mesh.h"
-#include "Material.h"
-#include "Shader.h"
+#include "Assets/Mesh.h"
+#include "Assets/Material.h"
+#include "Assets/Shader.h"
 #include "EngineAssets.h"
-#include "Model.h"
+#include "Assets/Model.h"
 
 struct OutlineConfig {
     bool active_ = false;

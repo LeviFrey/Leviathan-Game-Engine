@@ -1,11 +1,21 @@
 #include "RenderPipeline.h"
 
-RenderPipeline::RenderPipeline(unsigned int width, unsigned int height) :
+RenderPipeline::RenderPipeline(
+        unsigned int width, 
+        unsigned int height,
+        Window* window) :
     frame_buffer_{width, height},
-    screen_(std::make_unique<ScreenObject>(width, height, frame_buffer_.getTexture()))
+    screen_(width, height, frame_buffer_.getTexture()),
+    window_(window)
 {}
     
-void RenderPipeline::renderScreen(const std::vector<GameObject*>& objects) {
+void RenderPipeline::renderScreen(
+        const std::vector<GameObject*>& objects,
+        const std::vector<LightSource*>& lights,
+        Camera* camera
+) {
+
+    writeToUBOs(lights, camera);
 
     if (use_frame_buffer_) {
         frame_buffer_.bind();
@@ -15,23 +25,45 @@ void RenderPipeline::renderScreen(const std::vector<GameObject*>& objects) {
     resetScreen();
 
     for (GameObject* obj : objects) {
-
         if (obj->getComponents()->contains<Renderer>()) {
             obj->getComponents()->get<Renderer>()->render();
         }
     }
 
-    if (skybox_obj_) {
-        skybox_obj_->getComponents()->get<Renderer>()->render();
+    if (skybox_obj_.getTexture()) {
+        glDepthFunc(GL_LEQUAL);
+        skybox_obj_.getComponents()->get<Renderer>()->render();
+        glDepthFunc(GL_LESS);
     }
     
     if (use_frame_buffer_) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        screen_->getComponents()->get<Renderer>()->render();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+        screen_.getComponents()->get<Renderer>()->render();
     }
 
-    glfwSwapBuffers(window_);
+    glfwSwapBuffers(window_->getGLFWPtr());
     
+}
+
+void RenderPipeline::writeToUBOs(
+    const std::vector<LightSource*>& lights,
+    Camera* camera
+) {
+    LightBlock light_block;
+    int lightsFound = 0;
+    for (int i = 0; i < lights.size(); i++) {
+        if (lights[i]->getOn()) {
+            light_block.light_data[lightsFound++] = lights[i]->packLightData();
+        }
+    }
+    light_block.lightCount[0] = lightsFound;
+    light_ubo_.bufferData(&light_block);
+        
+    // fill Camera UBO
+    CameraData cameraData = camera->getData();
+    camera_ubo_.bufferData(&cameraData); 
 }
 
 void RenderPipeline::resetScreen() {

@@ -3,7 +3,6 @@
 
 #include <glm/glm.hpp>
 #include "Components/LightSource.h"
-#include "Shader.h"
 #include "Components/Transform.h"
 
 class PointLight : public LightSource {

@@ -1,5 +1,5 @@
-#include "VertexArrayObject.h"
-#include "Mesh.h"
+#include "Assets/VertexArrayObject.h"
+#include "Assets/Mesh.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -9,7 +9,6 @@ VertexArrayObject::VertexArrayObject() {
     setAttribute(0, {0, 3, offsetof(Vertex, position_)});
     setAttribute(1, {0, 3, offsetof(Vertex, normal_)});
     setAttribute(2, {0, 2, offsetof(Vertex, texCoords_)});
-    std::cout << "VAO constructor" << std::endl;
 }
 
 
@@ -113,7 +112,6 @@ unsigned int VertexArrayObject::loadResource() {
         );
 
     }
-    std::cout << "created VAO at id: " << VAO << std::endl;
     return VAO;
 }
 

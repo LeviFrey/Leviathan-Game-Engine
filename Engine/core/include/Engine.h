@@ -5,13 +5,6 @@
  * Basic headers:
  */
 #include "Game.h"
-#include "Model.h"
-#include "Mesh.h"
-#include "Shader.h"
-#include "Texture.h"
-#include "Shapes.h"
-#include "GameObject.h"
-#include "Material.h"
 
 /*
  * Utility Headers:

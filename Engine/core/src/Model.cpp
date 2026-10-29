@@ -1,8 +1,9 @@
-#include "Model.h"
+#include "Assets/Model.h"
+#include "EngineAssets.h"
 
-Model::Model(const std::filesystem::path& path) : path_(path) {
+Model::Model(const std::filesystem::path& path) : path_(path.parent_path()) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path_, aiProcess_Triangulate /* | aiProcess_FlipUVs*/);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate /* | aiProcess_FlipUVs*/);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         throw std::runtime_error( 
@@ -20,9 +21,9 @@ Model::Model(const std::filesystem::path& path) : path_(path) {
 
 std::unique_ptr<Material> Model::loadMaterial(aiMaterial* mat) {
     Texture* diffuse = 
-        addUniqueTexture<Texture>(Image(loadTexturePath(mat, aiTextureType_DIFFUSE)));
+        loadTexture(mat, aiTextureType_DIFFUSE);
     Texture* specular =
-        addUniqueTexture<Texture>(Image(loadTexturePath(mat, aiTextureType_SPECULAR)));
+        loadTexture(mat, aiTextureType_SPECULAR);
     
     int shininess = 1.0f;
     mat->Get(AI_MATKEY_SHININESS, shininess);
@@ -36,6 +37,13 @@ std::unique_ptr<Material> Model::loadMaterial(aiMaterial* mat) {
         shininess,
         1.0f
     );
+}
+
+Texture* Model::loadTexture(aiMaterial* mat, aiTextureType type) {
+    if (mat->GetTextureCount(type) == 0) {
+        return &EngineAssets::DEFAULT_TEXTURE;
+    }
+    return addUniqueTexture<Texture>(loadTexturePath(mat, type));
 }
 
 std::filesystem::path Model::loadTexturePath(aiMaterial* mat, aiTextureType type) {
