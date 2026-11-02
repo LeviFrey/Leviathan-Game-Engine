@@ -19,6 +19,28 @@ Texture::Texture(const std::filesystem::path& path, TextureConfig config) :
     config_(config)
 {}
 
+void Texture::moveFrom(Texture&& other) {
+    if (this != &other) {
+        // GPU resource
+        takeGPUResource(std::move(other));
+
+        // transfer this class
+        unique_image_ = std::move(other.unique_image_);
+        image_ = std::exchange(other.image_, nullptr);
+        config_ = std::exchange(other.config_, TextureConfig());
+    }
+}
+
+Texture& Texture::operator=(Texture&& other) noexcept {
+    moveFrom(std::move(other));
+    return *this;
+}
+
+Texture::Texture(Texture&& other) noexcept {
+    moveFrom(std::move(other));
+}
+
+
 unsigned int Texture::loadResource() {
     unsigned int tex_id;
     glGenTextures(1, &tex_id);
@@ -32,10 +54,10 @@ unsigned int Texture::loadResource() {
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB8,
+        image_->getNumChannels() == 3 ? GL_RGB8 : GL_RGBA8,
         image_->getWidth(), image_->getHeight(),
         0,
-        GL_RGB,
+        image_->getNumChannels() == 3 ? GL_RGB : GL_RGBA,
         GL_UNSIGNED_BYTE,
         image_->getData()
     );

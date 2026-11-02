@@ -1,4 +1,6 @@
 #include "Engine.h"
+#include "Player.h"
+#include "Floor.h"
 
 int main() {
 
@@ -44,9 +46,19 @@ int main() {
         p / "front.jpg", p / "back.jpg"
     };
     Cubemap skybox(paths);
-
     game.getRenderPipeline().getSkybox().setTexture(&skybox);
-    
+
+    // -- Player --
+    Player player(&game.getInputHandler());
+    game.addGameObject(&player);
+    game.setActiveCamera(player.getCamera());
+
+    // -- Floor -- 
+    Floor floor(10, 100, &game.getAssetManager());
+    game.addGameObject(&floor);
+    t = floor.getComponent<Transform>();
+    t->translate(glm::vec3(0.0f, -10.0f, 0.0f));
+
     // -- Start Game --
     game.Loop();
     return 0;

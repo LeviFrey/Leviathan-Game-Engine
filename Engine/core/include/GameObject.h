@@ -9,17 +9,31 @@ class GameObject {
         GameObject() = default;
         
         // Ran in Game Loop, ran each frame.
-        void updateComponents();
+        void update();
+
+        template <typename T, typename... Args>
+        T* addChild(Args&&... args) {
+            std::unique_ptr<T> child = std::make_unique<T>(std::forward<Args>(args)...);
+            child->component_graph_node_->setParent(component_graph_node_.get());
+            T* child_ptr = child.get();
+            children_.push_back(std::move(child));
+            return child_ptr;
+        }
         
-        void setParent(GameObject* other);
+        GameObject* addEmptyChild() {
+            return addChild<GameObject>();
+        }
 
-        //Component::ComponentSet* getComponents();
-
-        template<typename T, typename... Args>
+        template <typename T, typename... Args>
         T* addComponent(Args&&... args) {
             T* component = component_storage_->insert<T>(std::forward<Args>(args)...);
             component->setComponentNode(component_graph_node_.get());
             return component;
+        }
+
+        template <typename T>
+        T* getComponent() {
+            return component_storage_->get<T>();
         }
 
         const Component::ComponentSet* getComponents() const {
@@ -28,6 +42,8 @@ class GameObject {
 
 
     private:
+
+        std::vector<std::unique_ptr<GameObject>> children_;
 
         std::unique_ptr<Component::ComponentSet> component_storage_ = 
             std::make_unique<Component::ComponentSet>();

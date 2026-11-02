@@ -1,12 +1,13 @@
 #include "GameObject.h"
 #include <memory>
 
-void GameObject::setParent(GameObject* other) {
-    component_graph_node_->setParent(other->component_graph_node_.get());
-}
 
-void GameObject::updateComponents() {
+void GameObject::update() {
     for (auto& [type, component] : component_storage_->getData()) {
         component->update();
+    }
+
+    for (auto& child : children_) {
+        child->update();
     }
 }

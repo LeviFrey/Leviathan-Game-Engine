@@ -34,7 +34,7 @@ class GPUResource {
             gpu_resource_ = 0;
         }
 
-        void takeResource(GPUResource&& other) {
+        void takeGPUResource(GPUResource&& other) {
             unload();
             gpu_resource_ = std::exchange(other.gpu_resource_, 0);
         }

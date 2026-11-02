@@ -121,33 +121,38 @@ class AssetManager {
         //  storeAsset<AssetType>(std::move(Asset));
         //  storeAsset<AssetType>(AssetType(param1, param2, ...);
         template <typename T>
-        AssetID<T> storeAsset(T asset, const std::string& nametag = {}) {
+        T* storeAsset(T asset, const std::string& nametag = {}) {
             auto& asset_storage = getStorage<T>();
 
             asset_storage.data.push_back(
                 std::make_unique<T>(std::move(asset))
             );
 
-            AssetID<T> asset_id{asset_storage.data.size() - 1};
-
             if (!nametag.empty()) {
+                AssetID<T> asset_id{asset_storage.data.size() - 1};
                 asset_storage.registry.try_emplace(nametag, asset_id);
             }
 
-            return asset_id;
-        }
-
-        // -- EMPLACE: create asset within AssetManager with nametag
-        template<typename T, typename... Args>
-        AssetID<T> emplaceNamedAsset(const std::string nametag, Args&&... args) {
-            AssetID<T> asset_id = emplaceAsset<T>(std::forward<Args>(args)...);
-            
-            auto& asset_storage = getStorage<T>();
-            asset_storage.registry.try_emplace(nametag, asset_id);
-
-            return asset_id;
+            return asset_storage.data.back().get();
         }
         
+        // Used for polymorphic types
+        template <typename T>
+        T* storeAsset(std::unique_ptr<T> asset_ptr, const std::string& nametag = {}) {
+            auto& asset_storage = getStorage<T>();
+
+            asset_storage.data.push_back(
+                std::move(asset_ptr)
+            );
+ 
+            if (!nametag.empty()) {
+                AssetID<T> asset_id(asset_storage.data.size() - 1);
+                asset_storage.registry.try_emplace(nametag, asset_id);
+            }
+
+            return asset_storage.data.back().get();
+        }
+
         // -- EMPLACE: create asset within AssetManager, no nametag
         template<typename T, typename... Args>
         AssetID<T> emplaceAsset(Args&&... args) {
@@ -171,9 +176,9 @@ class AssetManager {
 
         // GET custom asset by ID
         template <typename T>
-        T& getAssetByID(const AssetID<T>& id) {
+        T* getAssetByID(const AssetID<T>& id) {
             auto& asset_storage = getStorage<T>();
-            return *asset_storage.data.at(id.value);
+            return asset_storage.data.at(id.value).get();
         }
 
         // ACCESS asset ID from data cache for filesystem-loaded assets
@@ -198,7 +203,7 @@ class AssetManager {
 
         // ACCESS asset from data cache for filesystem-loaded assets
         template <typename T>
-        T& loadAsset(const AssetKey<T>& key) {
+        T* loadAsset(const AssetKey<T>& key) {
             AssetID<T> asset_id = loadAssetID<T>(key);
             return getAssetByID<T>(asset_id);
         }

@@ -11,22 +11,22 @@ set(CMAKE_EXPORT_COMPILE_COMMAND ON)
 add_subdirectory(Engine)
 
 file(GLOB_RECURSE USER_SOURCES 
-    "${CMAKE_CURRENT_SOURCE_DIR}/games/*.cpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/Games/*.cpp")
 
 file(GLOB_RECURSE TOOLS
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/*.cpp")
 
-file(GLOB_RECURSE USER_BEHAVIORS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/behaviors/*.cpp" 
-    "${CMAKE_CURRENT_SOURCE_DIR}/behaviors/*.h")
+file(GLOB_RECURSE GAME_FILES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/GameFiles/*.cpp" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/GameFiles/*.h")
 
-foreach(GAME_FILE ${USER_SOURCES})
-    get_filename_component(GAME_NAME ${GAME_FILE} NAME_WE)
+foreach(GAME_EXE ${USER_SOURCES})
+    get_filename_component(GAME_NAME ${GAME_EXE} NAME_WE)
 
-    add_executable(${GAME_NAME} ${GAME_FILE})
+    add_executable(${GAME_NAME} ${GAME_EXE})
 
     target_include_directories(${GAME_NAME} PRIVATE 
-        "${CMAKE_CURRENT_SOURCE_DIR}/behaviors"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GameFiles"
     )
     
     target_link_libraries(${GAME_NAME} PRIVATE Engine)

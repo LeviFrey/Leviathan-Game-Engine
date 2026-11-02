@@ -24,22 +24,13 @@ class Texture : public TextureBase {
             unload(); 
         }
         
-        Texture& operator=(Texture&& other) noexcept {
-            if (this != &other) {
-
-                // transfer resource
-                takeResource(std::move(other)); 
-
-                // transfer image
-                unique_image_ = std::move(other.unique_image_);
-                image_ = std::exchange(other.image_, nullptr);
-                config_ = std::exchange(other.config_, TextureConfig());
-            }
-            return *this;
-        }
+        Texture& operator=(Texture&& other) noexcept;
+        Texture(Texture&& texture) noexcept;
                 
 
     private:
+
+        void moveFrom(Texture&& other);
 
         unsigned int loadResource() override;
         void deleteResource() override;

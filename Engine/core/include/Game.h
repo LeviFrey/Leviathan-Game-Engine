@@ -23,11 +23,6 @@ class Game {
     public:
         Game(int window_width, int window_height);
         
-        // Temporary Camera system, TODO: add configurable camera option
-        Camera* getCamera() { 
-            return camera_.getComponents()->get<Camera>();
-        }
-        
         // -- Call back functions --
         static Game* GamePtr(GLFWwindow* window);
         static void frameBufferSizeCallback(GLFWwindow* window, int width, int height); 
@@ -44,16 +39,17 @@ class Game {
         void addGameObject(GameObject* obj);
         void addLightSource(LightSource* light);
         InputHandler& getInputHandler() { return input_; }
+        AssetManager& getAssetManager() { return asset_manager_; }
+        void setActiveCamera(Camera* camera) { active_camera_ = camera; }
+        Camera* getActiveCamera() { return active_camera_; }
 
     private:
  
         // -- Game Context --
-        AssetManager asset_manager_;
-
-        // -- Game Loop Processing abstractions --
         Window window_;
         InputHandler input_;
         RenderPipeline render_pipeline_;
+        AssetManager asset_manager_;
 
         // -- Window config --
         std::function<void(Game&)> debugFunction_;
@@ -61,6 +57,7 @@ class Game {
         //  -- Game object handling --
         std::vector<GameObject*> game_objects_;
         std::vector<LightSource*> light_sources_;
-
-        GameObject camera_;
+    
+        GameObject default_camera_;
+        Camera* active_camera_{nullptr};
 };

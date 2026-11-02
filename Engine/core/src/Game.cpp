@@ -16,7 +16,7 @@
 
 void Game::frameBufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-    GamePtr(window)->getCamera()->setAspectRatio((float)width/(float)height);
+    GamePtr(window)->getActiveCamera()->setAspectRatio((float)width/(float)height);
 }
 
 Game* Game::GamePtr(GLFWwindow* window) {
@@ -63,10 +63,10 @@ Game::Game(int window_width, int window_height) :
 
     DEBUG_PRINT("Creating Game...");
 
-    // TODO: add configurable camera. For now, camera is locked to this option
-    camera_.addComponent<FreeCamera>(&input_);
-    camera_.addComponent<Transform>();
-    addGameObject(&camera_);
+    // Create default Camera object
+    default_camera_.addComponent<FreeCamera>(&input_);
+    default_camera_.addComponent<Transform>();
+    addGameObject(&default_camera_);
 }
 
 
@@ -94,13 +94,16 @@ void Game::Loop() {
 
         // Update all game objects
         for (GameObject* obj : game_objects_) {
-            obj->updateComponents();
+            obj->update();
         }
+        
+        Camera* camera = active_camera_ != nullptr ? 
+            active_camera_ : default_camera_.getComponents()->get<FreeCamera>();
 
         render_pipeline_.renderScreen(
             game_objects_, 
             light_sources_, 
-            camera_.getComponents()->get<FreeCamera>()
+            camera
         );
         
         // call debug function
